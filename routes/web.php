@@ -19,10 +19,9 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/admin', [AdminController::class, 'index'])->name('dashboard');
-    Route::post('/admin/quizzes', [AdminController::class, 'storeQuiz'])->name('quizzes.store');
-    Route::get('/admin/quizzes/create', [AdminController::class, 'createQuiz'])->name('quizzes.create');
-    Route::post('/admin/quizzes/store-wizard', [AdminController::class, 'storeQuizWithQuestions'])->name('quizzes.store-wizard');
+    Route::get('/', [AdminController::class, 'index'])->name('dashboard');
+    Route::post('/quizzes/store', [AdminController::class, 'storeQuiz'])->name('quizzes.store');
+    Route::get('/quizzes/create', [AdminController::class, 'createQuiz'])->name('quizzes.create');
 });
 
 require __DIR__.'/auth.php';

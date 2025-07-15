@@ -16,24 +16,12 @@ class AdminController extends Controller
         return view('admin.dashboard', compact('quizzes'));
     }
 
-    public function storeQuiz(Request $request)
-    {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string'
-        ]);
-
-        Quiz::create($validated);
-
-        return back()->with('success', 'Quiz created successfully!');
-    }
-
     public function createQuiz()
     {
         return view('admin.quizzes.create-wizard');
     }
 
-    public function storeQuizWithQuestions(Request $request)
+    public function storeQuiz(Request $request)
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
