@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('quiz_id')->constrained('quizzes')->onDelete('cascade');
             $table->string('question_text');
+            $table->string('media_path')->nullable();
             $table->timestamps();
         });
     }

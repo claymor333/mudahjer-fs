@@ -4,7 +4,7 @@
             <h2 class="font-semibold text-xl text-base-content leading-tight">
                 {{ __('Admin Dashboard') }}
             </h2>
-            <label for="create-quiz-modal" class="btn btn-primary">Create New Quiz</label>
+            <a href="{{ route('admin.quizzes.create') }}" class="btn btn-primary">Create New Quiz</a>
         </div>
     </x-slot>
 
