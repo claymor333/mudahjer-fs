@@ -1,7 +1,4 @@
 <x-app-layout>
-    <x-slot name="header">
-        {{-- Optionally add header content --}}
-    </x-slot>
 
     <div class="cursor-glow"></div>
 
