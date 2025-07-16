@@ -423,6 +423,7 @@
         </div>
     </div>
 
+    @push('scripts')
     <script>
         let currentStep = 1;
         let questionCount = 0;
@@ -946,11 +947,10 @@
                 processData: false,
                 contentType: false,
                 headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
                 },
                 success: function (response) {
-                    alert('Quiz saved successfully!');
-                    window.location.href = response.redirect ?? '/admin';
+                    window.location.href = response.redirect;
                 },
                 error: function (xhr) {
                     alert('Failed to save quiz. Please check your inputs.');
@@ -959,6 +959,7 @@
             });
         }
     </script>
+    @endpush
     @push('scripts')
     <script>
         // Initialize theme from the app layout's theme
