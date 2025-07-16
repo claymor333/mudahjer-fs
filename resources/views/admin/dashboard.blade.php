@@ -29,7 +29,7 @@
                                 <td>{{ $quiz->questions->count() }}</td>
                                 <td>
                                     <div class="btn-group">
-                                        <button class="btn btn-sm">Edit</button>
+                                        <a class="btn btn-sm btn-warning" href="{{ route('admin.quizzes.edit', $quiz->id) }}">Edit</a>
                                         <button class="btn btn-sm btn-error">Delete</button>
                                     </div>
                                 </td>
