@@ -231,8 +231,32 @@ class AdminController extends Controller
             return back()->withInput();
         }
     }
+
+    public function deleteQuiz($id)
+    {
+        \Log::info('Deleting quiz ID: ' . $id);
+
+        $quiz = Quiz::with('questions')->findOrFail($id);
+
+        try {
+            // delete related media files
+            foreach ($quiz->questions as $question) {
+                if ($question->media_path) {
+                    \Storage::disk('public')->delete($question->media_path);
+                }
+            }
+
+            // this assumes you have proper `onDelete('cascade')` on your foreign keys in the DB,
+            // or `->cascadeDeletes()` on Eloquent relationships if you prefer soft-deletes.
+            $quiz->delete();
+
+            session()->flash('success', 'Quiz deleted successfully!');
+            return redirect()->route('admin.dashboard');
         } catch (\Exception $e) {
-            return back()->with('error', 'Failed to create quiz. Please try again.');
+            \Log::error('Failed to delete quiz: '.$e->getMessage());
+
+            session()->flash('error', 'Failed to delete quiz. Please try again.');
+            return redirect()->route('admin.dashboard');
         }
     }
 }

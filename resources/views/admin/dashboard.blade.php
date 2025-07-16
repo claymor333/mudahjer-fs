@@ -22,7 +22,13 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($quizzes as $quiz)
+                            @forelse($quizzes as $quiz)
+                            <form id="delete-quiz-form-{{ $quiz->id }}" 
+                                action="{{ route('admin.quizzes.delete', $quiz->id) }}" 
+                                method="POST" style="display: none;">
+                                @csrf
+                                @method('DELETE')
+                            </form>
                             <tr>
                                 <td>{{ $quiz->title }}</td>
                                 <td>{{ Str::limit($quiz->description, 50) }}</td>
@@ -30,16 +36,22 @@
                                 <td>
                                     <div class="btn-group">
                                         <a class="btn btn-sm btn-warning" href="{{ route('admin.quizzes.edit', $quiz->id) }}">Edit</a>
-                                        <button class="btn btn-sm btn-error">Delete</button>
+                                        <a class="btn btn-sm btn-error" href="#" onclick="confirmDelete( {{ $quiz->id }} )">Delete</a>
                                     </div>
                                 </td>
                             </tr>
-                            @endforeach
+                            @empty
+                            <tr>
+                                <td colspan="4" class="text-center text-gray-500">
+                                    No quizzes found.
+                                </td>
+                            </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
                 <div class="p-4">
-                    {{ $quizzes->links() }}
+                    <x-daisy-pagination :paginator="$quizzes" />
                 </div>
             </div>
         </div>
@@ -71,4 +83,15 @@
             </form>
         </div>
     </div>
+        
+    @push('scripts')
+        <script>
+            function confirmDelete(quizId) {
+                if (confirm('Are you sure you want to delete this quiz? This action cannot be undone.')) {
+                    document.getElementById(`delete-quiz-form-${quizId}`).submit();
+                }
+            }
+        </script>
+    @endpush
+
 </x-app-layout>

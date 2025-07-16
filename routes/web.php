@@ -20,8 +20,13 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [AdminController::class, 'index'])->name('dashboard');
-    Route::post('/quizzes/store', [AdminController::class, 'storeQuiz'])->name('quizzes.store');
     Route::get('/quizzes/create', [AdminController::class, 'createQuiz'])->name('quizzes.create');
+    Route::post('/quizzes/store', [AdminController::class, 'storeQuiz'])->name('quizzes.store');
+
+    Route::get('/quizzes/{id}/edit', [AdminController::class, 'editQuiz'])->name('quizzes.edit');
+    Route::put('/quizzes/{id}/update', [AdminController::class, 'updateQuiz'])->name('quizzes.update');
+
+    Route::delete('/quizzes/{id}/delete', [AdminController::class, 'deleteQuiz'])->name('quizzes.delete');
 });
 
 require __DIR__.'/auth.php';
