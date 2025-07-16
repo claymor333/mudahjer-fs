@@ -7,12 +7,19 @@ use App\Models\Question;
 use App\Models\Choice;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class AdminController extends Controller
 {
     public function index()
     {
         $quizzes = Quiz::latest()->paginate(10);
+
+        if (request()->has('message')) {
+            session()->flash('success', request()->message);
+        }
+
         return view('admin.dashboard', compact('quizzes'));
     }
 
@@ -60,7 +67,28 @@ class AdminController extends Controller
                 }
             }
 
-            return redirect()->route('admin.dashboard')->with('success', 'Quiz created successfully!');
+            session()->flash('success', 'Quiz created successfully!');
+
+            return response()->json([
+                'success' => true,
+                'redirect' => route('admin.dashboard', ['message' => 'Quiz created successfully!'])
+            ]);
+
+            return redirect()->route('admin.dashboard');
+        } catch (\Exception $e) {
+            Log::error('Quiz creation failed: ' . $e->getMessage());
+
+            session()->flash('error', 'Failed to create quiz. Please try again.');
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create quiz. Please try again.'
+            ], 500);
+
+            return back()->withInput();
+        }
+    }
+
         } catch (\Exception $e) {
             return back()->with('error', 'Failed to create quiz. Please try again.');
         }
