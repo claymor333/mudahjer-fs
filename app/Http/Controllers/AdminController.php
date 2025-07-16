@@ -18,7 +18,7 @@ class AdminController extends Controller
 
     public function createQuiz()
     {
-        return view('admin.quizzes.create-wizard');
+        return view('admin.quizzes.create-quiz');
     }
 
     public function storeQuiz(Request $request)
