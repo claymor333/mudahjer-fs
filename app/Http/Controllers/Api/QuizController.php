@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Lesson;
+use App\Models\Player;
 use App\Models\Quiz;
 use Illuminate\Http\Request;
 
@@ -12,25 +14,34 @@ class QuizController extends Controller
 {
 
     /**
+     * Get a list of lessons.
+     */
+    public function getLessons($user_id)
+    {
+        // Logic to retrieve lessons for the user
+        // This is a placeholder, implement your logic here
+        $player = Player::where('user_id', $user_id)->first();
+
+
+        if (!$player) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Player not found'
+            ], 404);
+        }
+        // Get lessons for the player
+        $lessons = $player->lessons;
+
+        $returnArr = [
+            'status' => 'success',
+            'data' => $lessons
+        ];
+        return response()->json($returnArr);
+    }
+    /**
      * Get a list of quizzes.
      */
-    public function getQuizzes(){
-        $quizzes = Quiz::with('questions.choices')
-            ->where('is_active', true)
-            ->orderBy('created_at', 'desc')
-            ->get()
-            ->each(function ($quiz) {
-                $quiz->questions->each(function ($question) {
-                    $question->choices = $question->choices->map(function ($choice) {
-                        return [
-                            'id' => $choice->id,
-                            'text' => $choice->text,
-                            'is_correct' => $choice->is_correct
-                        ];
-                    });
-                });
-            });
-    }
+    public function getQuizzes() {}
     /**
      * Display a listing of the resource.
      */
