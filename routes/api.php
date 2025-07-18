@@ -3,7 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
-
+use App\Http\Controllers\Api\QuizController;
 
 /// {url}/api/register - register and returns bearer token
 /// params -----
@@ -22,3 +22,5 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
+
+Route::get('/quizzes', [QuizController::class,'getQuizzes'])->middleware('auth:sanctum');
