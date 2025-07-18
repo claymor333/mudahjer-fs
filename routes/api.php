@@ -23,4 +23,13 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::get('/quizzes', [QuizController::class,'getQuizzes'])->middleware('auth:sanctum');
+Route::group(['middleware' => 'auth:sanctum'], function () {
+    // Get Lessons
+    Route::get('/lessons/{user_id}', [QuizController::class, 'getLessons']);
+    Route::get('/quizzes/{lesson_id}', [QuizController::class,'getQuizzes']);
+    Route::get('/questions/{quiz_id}', [QuizController::class,'getQuizzes']);
+    Route::get('/choices/{question_id}', [QuizController::class,'getQuizzes']);
+});
+// Get Quizzes for a specific lesson
+// Get Questions for a specific quiz
+// Get Choices for a specific question
