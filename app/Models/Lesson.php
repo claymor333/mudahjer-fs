@@ -9,7 +9,7 @@ class Lesson extends Model
     //
     protected $fillable = [
         'title',
-        'description'
+        'description',
     ];
 
     public function player()
