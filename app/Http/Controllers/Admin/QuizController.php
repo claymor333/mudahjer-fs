@@ -1,34 +1,25 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
-use App\Models\Quiz;
-use App\Models\Question;
+use App\Http\Controllers\Controller;
 use App\Models\Choice;
+use App\Models\Question;
+use App\Models\Quiz;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
-class AdminController extends Controller
+class QuizController extends Controller
 {
-    public function index()
-    {
-        $quizzes = Quiz::latest()->paginate(10);
-
-        if (request()->has('message')) {
-            session()->flash('success', request()->message);
-        }
-
-        return view('admin.dashboard', compact('quizzes'));
-    }
-
-    public function createQuiz()
+    //
+    public function create()
     {
         return view('admin.quizzes.create-quiz');
     }
 
-    public function storeQuiz(Request $request)
+    public function store(Request $request)
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -89,7 +80,7 @@ class AdminController extends Controller
         }
     }
 
-    public function editQuiz($quizId)
+    public function edit($quizId)
     {
         $quiz = Quiz::with([
             'questions' => function ($query) {
@@ -104,7 +95,7 @@ class AdminController extends Controller
     }
 
 
-    public function updateQuiz(Request $request, $id)
+    public function update(Request $request, $id)
     {
         $quiz = Quiz::findOrFail($id);
 
@@ -232,9 +223,9 @@ class AdminController extends Controller
         }
     }
 
-    public function deleteQuiz($id)
+    public function destroy($id)
     {
-        \Log::info('Deleting quiz ID: ' . $id);
+        Log::info('Deleting quiz ID: ' . $id);
 
         $quiz = Quiz::with('questions')->findOrFail($id);
 
@@ -242,7 +233,7 @@ class AdminController extends Controller
             // delete related media files
             foreach ($quiz->questions as $question) {
                 if ($question->media_path) {
-                    \Storage::disk('public')->delete($question->media_path);
+                    Storage::disk('public')->delete($question->media_path);
                 }
             }
 
@@ -253,7 +244,7 @@ class AdminController extends Controller
             session()->flash('success', 'Quiz deleted successfully!');
             return redirect()->route('admin.dashboard');
         } catch (\Exception $e) {
-            \Log::error('Failed to delete quiz: '.$e->getMessage());
+            Log::error('Failed to delete quiz: '.$e->getMessage());
 
             session()->flash('error', 'Failed to delete quiz. Please try again.');
             return redirect()->route('admin.dashboard');
