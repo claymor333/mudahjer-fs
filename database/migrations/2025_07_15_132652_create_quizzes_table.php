@@ -9,10 +9,24 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
+
+    /**
+     * This is Parent of the Quizzes table.
+     */
     public function up(): void
     {
+          Schema::create('lessons', function (Blueprint $table) {
+            $table->id();
+            $table->string('title');
+            $table->text('description')->nullable();
+            $table->timestamps();
+        });
+    /**
+     * This is the Quizzes for the lesson.
+     */
         Schema::create('quizzes', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('lesson_id')->constrained('lessons')->onDelete('cascade');
             $table->string('title');
             $table->text('description')->nullable();
             $table->timestamps();
