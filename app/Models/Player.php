@@ -14,13 +14,15 @@ class Player extends Model
         'level',
         'exp',
     ];
-    public function user(){
+    public function user()
+    {
         return $this->belongsTo(User::class, 'user_id');
     }
 
     public function lessons()
     {
         return $this->belongsToMany(Lesson::class, 'players_lessons', 'player_id', 'lesson_id')
+            ->withPivot('completed', 'completed_at')
             ->withTimestamps();
     }
 }
