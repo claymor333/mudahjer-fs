@@ -18,10 +18,7 @@ class QuizController extends Controller
      */
     public function getLessons($user_id)
     {
-        // Logic to retrieve lessons for the user
-        // This is a placeholder, implement your logic here
         $player = Player::where('user_id', $user_id)->first();
-
 
         if (!$player) {
             return response()->json([
@@ -29,19 +26,56 @@ class QuizController extends Controller
                 'message' => 'Player not found'
             ], 404);
         }
-        // Get lessons for the player
+
         $lessons = $player->lessons;
 
-        $returnArr = [
+        $total = $lessons->count();
+        $completed = $lessons->where('pivot.completed', true)->count();
+        $percentage = $total > 0 ? round(($completed / $total) * 100, 2) : 0;
+
+        // Add completed and progress info to each lesson
+        $lessonsData = $lessons->map(function ($lesson) {
+            return [
+                'id' => $lesson->id,
+                'title' => $lesson->title,
+                'completed' => (bool) $lesson->pivot->completed,
+                'progress' => $lesson->pivot->progress,
+                'completed_at' => $lesson->pivot->completed_at,
+            ];
+        });
+
+        return response()->json([
             'status' => 'success',
-            'data' => $lessons
-        ];
-        return response()->json($returnArr);
+            'data' => $lessonsData,
+            'percentage_completed' => $percentage,
+            'total_lessons' => $total,
+            'completed_lessons' => $completed,
+        ]);
     }
     /**
      * Get a list of quizzes.
      */
-    public function getQuizzes() {}
+    public function getQuizzes($lesson_id)
+    {
+        $quizzes = Quiz::where('lesson_id', $lesson_id)->get();
+        $this_lesson = Lesson::find($lesson_id);
+        if ($quizzes->isEmpty()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No quizzes found'
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $quizzes,
+            'lesson' => [
+                'id' => $this_lesson->id,
+                'title' => $this_lesson->title,
+                'description' => $this_lesson->description,
+            ]
+        ]);
+    }
     /**
      * Display a listing of the resource.
      */

@@ -22,7 +22,7 @@ class Player extends Model
     public function lessons()
     {
         return $this->belongsToMany(Lesson::class, 'players_lessons', 'player_id', 'lesson_id')
-            ->withPivot('completed', 'completed_at')
+            ->withPivot('completed', 'progress', 'completed_at')
             ->withTimestamps();
     }
 }
