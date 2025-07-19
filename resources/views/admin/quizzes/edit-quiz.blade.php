@@ -5,159 +5,9 @@
         </h2>
     </x-slot>
 
-    <style>
-        /* Modified Carousel Animation */
-        .questions-carousel {
-            position: relative;
-            min-height: 70vh;
-            height: auto;
-            perspective: 2000px;
-            transform-style: preserve-3d;
-            margin-bottom: 100px;
-            overscroll-behavior: none;
-            padding-bottom: 100px;
-        }
+    @vite(['resources/css/quiz-wizard.css'])
 
-        .question-card {
-            position: absolute;
-            width: 100%;
-            height: fit-content;
-            max-width: 48rem;
-            left: 50%;
-            right: auto;
-            transform: translateX(-50%);
-            transition: all 0.5s ease-in-out;
-            opacity: 0;
-            filter: blur(4px);
-            pointer-events: none;
-            padding-bottom: 2rem;
-        }
-
-        .question-card.prev-2 {
-            opacity: 0.3;
-            filter: blur(6px);
-            transform: translateX(calc(-50% - 100%)) translateZ(-200px) rotateY(25deg);
-        }
-
-        .question-card.prev-1 {
-            opacity: 0.5;
-            filter: blur(3px);
-            transform: translateX(calc(-50% - 50%)) translateZ(-100px) rotateY(15deg);
-        }
-
-        .question-card.active {
-            opacity: 1;
-            filter: blur(0);
-            transform: translateX(-50%);
-            z-index: 10;
-            pointer-events: all;
-        }
-
-        .question-card.next-1 {
-            opacity: 0.5;
-            filter: blur(3px);
-            transform: translateX(calc(-50% + 50%)) translateZ(-100px) rotateY(-15deg);
-        }
-
-        .question-card.next-2 {
-            opacity: 0.3;
-            filter: blur(6px);
-            transform: translateX(calc(-50% + 100%)) translateZ(-200px) rotateY(-25deg);
-        }
-
-        /* Media Preview */
-        .media-preview {
-            position: relative;
-            overflow: hidden;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-
-        .media-preview img,
-        .media-preview video {
-            transition: transform 0.2s ease-in-out;
-        }
-
-        .media-preview:hover img,
-        .media-preview:hover video {
-            transform: scale(1.05);
-        }
-
-        /* Preview Modal */
-        .preview-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(5px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-        }
-
-        .preview-modal.active {
-            opacity: 1;
-            pointer-events: all;
-        }
-
-        .preview-modal .content {
-            max-width: 90vw;
-            max-height: 90vh;
-            position: relative;
-        }
-
-        .preview-modal img,
-        .preview-modal video {
-            max-width: 90vw;
-            max-height: 90vh;
-            object-fit: contain;
-        }
-
-        .preview-modal .close-btn {
-            position: absolute;
-            top: -3rem;
-            right: 0;
-            color: white;
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        /* Floating Action Buttons */
-        .fab-container {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 1rem;
-            z-index: 50;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .question-nav {
-                position: static;
-                transform: none;
-                margin: 1rem 0;
-            }
-            
-            .question-nav.prev {
-                left: auto;
-            }
-            
-            .question-nav.next {
-                right: auto;
-            }
-        }
-    </style>
-
-    <div class="py-12">
+    <div class="py-4">
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
             <!-- Enhanced Stepper -->
             <div class="mb-12">
@@ -202,19 +52,15 @@
                             </legend>
                             <input type="text" id="quiz-title" class="w-full input input-bordered validator" 
                                 placeholder="Enter quiz title..." required value="{{ $quiz->title }}" />
-                            <p class="validator-hint">Title is required.</p>
-                        </fieldset>
+                            <p class="validator-hint hidden">Title is required.</p>
 
-                        <fieldset class="fieldset">
                             <legend class="fieldset-legend">
                                 <span class="label-text font-medium text-lg">Description</span>
                             </legend>
                             <textarea id="quiz-description" class="w-full textarea textarea-bordered validator" 
                                 rows="4" placeholder="Describe your quiz..." required>{{ $quiz->description }}</textarea>
-                            <p class="validator-hint">Description is required.</p>
-                        </fieldset>
+                            <p class="validator-hint hidden">Description is required.</p>
 
-                        <fieldset class="fieldset">
                             <legend class="fieldset-legend">
                                 <span class="label-text font-medium text-lg">Choices Type</span>
                             </legend>
@@ -277,9 +123,11 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                                 </svg>
                             </button>
-                            <span class="flex-row" id="prevKbd">
-                                <kbd class="kbd kbd-sm">CTRL</kbd> + <kbd class="kbd kbd-sm">Q</kbd>
-                            </span>
+                            <div class="kbd-inst-q">
+                                <span class="flex-row" id="prevKbd">
+                                    <kbd class="kbd kbd-sm">CTRL</kbd> + <kbd class="kbd kbd-sm">Q</kbd>
+                                </span>
+                            </div>
                         </div>
                         
                         <div class="fixed right-4 top-1/2 flex flex-col items-center gap-2">
@@ -288,48 +136,15 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                                 </svg>
                             </button>
-                            <span class="flex-row" id="nextKbd">
-                                <kbd class="kbd kbd-sm">CTRL</kbd> + <kbd class="kbd kbd-sm">E</kbd>
-                            </span>
+                            <div class="kbd-inst-q">
+                                <span class="flex-row" id="nextKbd">
+                                    <kbd class="kbd kbd-sm">CTRL</kbd> + <kbd class="kbd kbd-sm">E</kbd>
+                                </span>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Floating Action Buttons -->
-                    <div class="fab-container" id="fab-container">
-                        <div class="tooltip tooltip-left" data-tip="Cancel Edit">
-                            <button type="button" class="btn btn-circle btn-lg btn-error fab" onclick="cancelQuiz()">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                </svg>
-                            </button>
-                        </div>
-                        <div class="tooltip tooltip-left">
-                            <div class="tooltip-content">
-                                <div class="flex-col">
-                                    <p class="mb-2">Save Changes</p>
-                                    <kbd class="kbd kbd-sm">CTRL</kbd> + <kbd class="kbd kbd-sm">S</kbd>
-                                </div>
-                            </div>
-                            <button type="button" class="btn btn-circle btn-lg btn-success fab" onclick="saveQuiz()">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                </svg>
-                            </button>
-                        </div>
-                        <div class="tooltip tooltip-left">
-                            <div class="tooltip-content">
-                                <div class="flex-col">
-                                    <p class="mb-2">Add Question</p>
-                                    <kbd class="kbd kbd-sm">CTRL</kbd> + <kbd class="kbd kbd-sm">E</kbd>
-                                </div>
-                            </div>
-                            <button type="button" class="btn btn-circle btn-lg btn-primary fab" onclick="addQuestion()">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
+                    @include('admin.quizzes.partials.wizard-fab')
                 </div>
             </form>
         </div>
@@ -355,6 +170,7 @@
         let questions = [];
         let deletedQuestions = [];
         let currentTheme = document.documentElement.getAttribute('data-theme');
+        let keyboardNavigationEnabled = true;
 
         // Initialize the form with the existing quiz data
         $(document).ready(function() {
@@ -471,10 +287,8 @@
                             </legend>
                             <input type="text" name="questions[${nextNumber-1}][question_text]" class="w-full input input-bordered validator" 
                                 placeholder="Enter your question..." required value="${questionText}">
-                            <p class="validator-hint">Question text is required.</p>
-                        </fieldset>
+                            <p class="validator-hint hidden">Question text is required.</p>
 
-                        <fieldset class="fieldset">
                             <legend class="fieldset-legend">
                                 <span class="font-medium text-lg">Media (Optional)</span>
                             </legend>
@@ -498,9 +312,7 @@
                                     </div>
                                 ` : ''}
                             </div>
-                        </fieldset>
 
-                        <div class="form-control">
                             <legend class="legend">
                                 <span class="font-medium text-lg">Answer Choices</span>
                             </legend>
@@ -549,7 +361,7 @@
                                 </svg>
                                 Add Choice
                             </button>
-                        </div>
+                        </fieldset>
                     </div>
                 </div>
             `;
@@ -753,22 +565,49 @@
 			updateQuestionCounter();
 			updateNavigationButtons();
 		}
+        
+        function toggleKeyboardNavigation() {
+            keyboardNavigationEnabled = !keyboardNavigationEnabled;
+            const btn = $('#toggleKeyboardNav');
+            if (keyboardNavigationEnabled) {
+                btn.removeClass('btn-ghost').addClass('btn-accent');
+                $('.kbd').removeClass('hidden');
+                $('.kbd-inst').removeClass('hidden');
+                $('.kbd-inst-q').removeClass('hidden');
+                $('.kbd-inst').addClass('mt-2');
+            } else {
+                btn.removeClass('btn-accent').addClass('btn-ghost');
+                $('.kbd').addClass('hidden');
+                $('.kbd-inst').addClass('hidden');
+                $('.kbd-inst-q').addClass('hidden');
+                $('.kbd-inst').removeClass('mt-2');
+            }
+        }
 
 		document.addEventListener('keydown', (e) => {
+            if (!keyboardNavigationEnabled) return;
+            
             if (e.ctrlKey && (e.key === 'q' || e.key === 'Q')) {
-                e.preventDefault(); // optional: prevent browser default behavior
-                prevQuestion();
+                e.preventDefault();
+                if (currentStep === 2 && currentQuestionIndex === 0) {
+                    prevStep();
+                } else if (currentStep === 2) {
+                    prevQuestion();
+                }
             }
             if (e.ctrlKey && (e.key === 'e' || e.key === 'E')) {
                 e.preventDefault();
-                nextQuestion();
+                if (currentStep === 1) {
+                    nextStep();
+                } else if (currentStep === 2) {
+                    nextQuestion();
+                }
             }
             if (e.ctrlKey && (e.key === 's' || e.key === 'S')) {
                 e.preventDefault();
                 saveQuiz();
             }
         });
-
 
         function updateQuestionCounter() {
             $('#current-question-num').text(currentQuestionIndex + 1);
