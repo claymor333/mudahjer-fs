@@ -50,7 +50,7 @@
         </div>
     </x-slot>
 
-    <div class="py-12 bg-gradient-to-br from-base-200 via-base-100 to-base-200 min-h-screen">
+    <div class="py-4 bg-gradient-to-br from-base-200 via-base-100 to-base-200 min-h-screen">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
 
             <!-- Additional Stats Section -->
