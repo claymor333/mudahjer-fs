@@ -29,6 +29,7 @@ return new class extends Migration
             $table->foreignId('lesson_id')->constrained('lessons')->onDelete('cascade');
             $table->string('title');
             $table->text('description')->nullable();
+            $table->enum('choices_type', ['text', 'media'])->default('text');
             $table->timestamps();
         });
     }
