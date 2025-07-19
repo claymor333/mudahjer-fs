@@ -13,7 +13,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call(RoleSeeder::class);
+        $this->call([
+            RoleSeeder::class,
+            // TestSeeder::class,
+            LessonSeeder::class,
+        ]);
 
         $userAdmin = User::create([
             'name' => 'Admin User',

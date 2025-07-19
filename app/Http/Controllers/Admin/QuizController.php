@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Quiz;
 use App\Models\Question;
 use App\Models\Choice;
+use App\Models\Lesson;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -28,7 +29,8 @@ class QuizController extends Controller
 
     public function createQuiz()
     {
-        return view('admin.quizzes.create-quiz');
+        $lessons = Lesson::get();
+        return view('admin.quizzes.create-quiz', compact('lessons'));
     }
 
     public function storeQuiz(Request $request)
@@ -36,6 +38,8 @@ class QuizController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
+            'choices_type' => 'required|in:text,media',
+            'lesson_id' => 'required',
             'questions' => 'required|array|min:1',
             'questions.*.question_text' => 'required|string',
             'questions.*.choices' => 'required|array|min:2',
@@ -47,7 +51,9 @@ class QuizController extends Controller
         try {
             $quiz = Quiz::create([
                 'title' => $validated['title'],
-                'description' => $validated['description']
+                'description' => $validated['description'],
+                'choices_type' => $validated['choices_type'],
+                'lesson_id' => $validated['lesson_id']
             ]);
 
             foreach ($validated['questions'] as $index => $questionData) {
@@ -103,7 +109,11 @@ class QuizController extends Controller
             }
         ])->findOrFail($quizId);
 
-        return view('admin.quizzes.edit-quiz', compact('quiz'));
+        $lessons = Lesson::get();
+
+        // Log::info('Editing quiz ID: ' . $quiz);
+
+        return view('admin.quizzes.edit-quiz', compact('quiz', 'lessons'));
     }
 
 
@@ -115,6 +125,8 @@ class QuizController extends Controller
             $validated = $request->validate([
                 'title' => 'required|string|max:255',
                 'description' => 'required|string',
+                'choices_type' => 'required|in:media,text',
+                'lesson_id' => 'required',
                 'questions' => 'required|array|min:1',
                 'questions.*.id' => 'nullable|exists:questions,id',
                 'questions.*.question_text' => 'required|string',
@@ -131,7 +143,9 @@ class QuizController extends Controller
             // Update quiz basic info
             $quiz->update([
                 'title' => $validated['title'],
-                'description' => $validated['description']
+                'description' => $validated['description'],
+                'choices_type' => $validated['choices_type'],
+                'lesson_id' => $validated['lesson_id']
             ]);
 
             // Keep track of processed questions and choices to remove deleted ones
@@ -260,6 +274,35 @@ class QuizController extends Controller
 
             session()->flash('error', 'Failed to delete quiz. Please try again.');
             return redirect()->route('admin.dashboard');
+        }
+    }
+
+    public function storeLesson() {
+        $validated = request()->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string'
+        ]);
+
+        try {
+            $lesson = Lesson::create($validated);
+
+            session()->flash('success', 'Lesson created successfully!');
+
+            return response()->json([
+                'success' => true,
+                'id' => $lesson->id,
+                'title' => $lesson->title,
+                'redirect' => route('admin.quizzes.create', ['message' => 'Lesson created successfully!'])
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to create lesson: ' . $e->getMessage());
+
+            session()->flash('error', 'Failed to create lesson. Please try again.');
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create lesson. Please try again.'
+            ], 500);
         }
     }
 }

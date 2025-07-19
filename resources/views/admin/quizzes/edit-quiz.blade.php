@@ -216,17 +216,30 @@
 
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend">
-                                <span class="label-text font-medium text-lg">Category</span>
+                                <span class="label-text font-medium text-lg">Choices Type</span>
                             </legend>
-                            <select id="quiz-category" class="w-full select select-bordered">
-                                <option value="">Select a category</option>
-                                <option value="general" {{ $quiz->category === 'general' ? 'selected' : '' }}>General Knowledge</option>
-                                <option value="science" {{ $quiz->category === 'science' ? 'selected' : '' }}>Science</option>
-                                <option value="history" {{ $quiz->category === 'history' ? 'selected' : '' }}>History</option>
-                                <option value="sports" {{ $quiz->category === 'sports' ? 'selected' : '' }}>Sports</option>
-                                <option value="entertainment" {{ $quiz->category === 'entertainment' ? 'selected' : '' }}>Entertainment</option>
-                                <option value="technology" {{ $quiz->category === 'technology' ? 'selected' : '' }}>Technology</option>
+                            <select id="quiz-choices-type" class="w-full select select-bordered">
+                                <option value="text" {{ $quiz->choices_type == 'text' ? 'selected' : '' }}>Question and Text Choices</option>
+                                <option value="media" {{ $quiz->choices_type == 'media' ? 'selected' : '' }}>Question and Media Choices</option>
                             </select>
+
+                            <legend class="fieldset-legend">
+                                <span class="label-text font-medium text-lg">Associated Lesson</span>
+                            </legend>
+                            <div class="join w-full">
+                                <select id="quiz-lesson" class="select select-bordered join-item w-full" required>
+                                    <option value="" disabled selected>Select a lesson</option>
+                                    @foreach($lessons as $lesson)
+                                        <option value="{{ $lesson->id }}" {{ $lesson->id == $lesson->id ? 'selected' : '' }}>{{ $lesson->title }}</option>
+                                    @endforeach
+                                </select>
+                                <button type="button" class="btn join-item" onclick="createNewLesson()">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                            <p class="validator-hint hidden">Please select a lesson</p>
                         </fieldset>
 
                         <div class="card-actions justify-end mt-8">
@@ -920,11 +933,96 @@
 			}
 		}
 
+        function createNewLesson() {
+            // Create modal for new lesson
+            const modalHtml = `
+                <dialog id="new-lesson-modal" class="modal">
+                    <div class="modal-box">
+                        <h3 class="font-bold text-lg mb-4">Create New Lesson</h3>
+                        <form id="new-lesson-form" method="dialog">
+                            <fieldset class="fieldset">
+                                <legend class="fieldset-legend">
+                                    <span class="label-text font-medium">Lesson Title</span>
+                                </legend>
+                                <input type="text" id="lesson-title" class="w-full input input-bordered validator" placeholder="Enter lesson title..." required />
+                                <p class="validator-hint hidden">Title is required.</p>
+
+                                <legend class="fieldset-legend">
+                                    <span class="label-text font-medium">Description</span>
+                                </legend>
+                                <textarea id="lesson-description" class="w-full textarea textarea-bordered validator" rows="4" placeholder="Describe your lesson..." required></textarea>
+                                <p class="validator-hint hidden">Description is required.</p>
+                            </fieldset>
+                            
+                            <div class="modal-action">
+                                <button type="button" class="btn" onclick="closeNewLessonModal()">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Create Lesson</button>
+                            </div>
+                        </form>
+                    </div>
+                    <form method="dialog" class="modal-backdrop">
+                        <button>Close</button>
+                    </form>
+                </dialog>
+            `;
+
+            // Add modal to body if it doesn't exist
+            if (!document.getElementById('new-lesson-modal')) {
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+            }
+
+            // Show modal
+            const modal = document.getElementById('new-lesson-modal');
+            modal.showModal();
+
+            // Handle form submission
+            $('#new-lesson-form').on('submit', function(e) {
+                e.preventDefault();
+                const title = $('#lesson-title').val().trim();
+                const description = $('#lesson-description').val().trim();
+
+                if (!title || !description) {
+                    return;
+                }
+
+                $.ajax({
+                    url: '/admin/quizzes/lesson/store',
+                    method: 'POST',
+                    data: {
+                        title: title,
+                        description: description,
+                        _token: $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        // Add new lesson to select
+                        $('#quiz-lesson').append(
+                            `<option value="${response.id}" selected>${response.title}</option>`
+                        );
+                        closeNewLessonModal();
+                        alert('Lesson created successfully!');
+                    },
+                    error: function(xhr) {
+                        alert('Failed to create lesson. Please try again.');
+                        console.error(xhr.responseText);
+                    }
+                });
+            });
+        }
+
+        function closeNewLessonModal() {
+            const modal = document.getElementById('new-lesson-modal');
+
+            $('#new-lesson-form').trigger('reset');
+            modal.close();
+            $('#new-lesson-form').off('submit');
+        }
+
         function saveQuiz() {
             const quizId = $('#quiz-id').val();
             const title = $('#quiz-title').val().trim();
             const description = $('#quiz-description').val().trim();
-            const category = $('#quiz-category').val();
+            const choicesType = $('#quiz-choices-type').val();
+            const lessonId = $('#quiz-lesson').val();
 
             if (!title || !description) {
                 alert('Please fill in all quiz details!');
@@ -940,7 +1038,8 @@
             formData.append('_method', 'PUT');
             formData.append('title', title);
             formData.append('description', description);
-            formData.append('category', category);
+            formData.append('choices_type', choicesType);
+            formData.append('lesson_id', lessonId);
             formData.append('deleted_questions', JSON.stringify(deletedQuestions));
 
             let isValid = true;
