@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Admin\QuizController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -19,14 +19,14 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/', [AdminController::class, 'index'])->name('dashboard');
-    Route::get('/quizzes/create', [AdminController::class, 'createQuiz'])->name('quizzes.create');
-    Route::post('/quizzes/store', [AdminController::class, 'storeQuiz'])->name('quizzes.store');
+    Route::get('/', [QuizController::class, 'index'])->name('dashboard');
+    Route::get('/quizzes/create', [QuizController::class, 'createQuiz'])->name('quizzes.create');
+    Route::post('/quizzes/store', [QuizController::class, 'storeQuiz'])->name('quizzes.store');
 
-    Route::get('/quizzes/{id}/edit', [AdminController::class, 'editQuiz'])->name('quizzes.edit');
-    Route::put('/quizzes/{id}/update', [AdminController::class, 'updateQuiz'])->name('quizzes.update');
+    Route::get('/quizzes/{id}/edit', [QuizController::class, 'editQuiz'])->name('quizzes.edit');
+    Route::put('/quizzes/{id}/update', [QuizController::class, 'updateQuiz'])->name('quizzes.update');
 
-    Route::delete('/quizzes/{id}/delete', [AdminController::class, 'deleteQuiz'])->name('quizzes.delete');
+    Route::delete('/quizzes/{id}/delete', [QuizController::class, 'deleteQuiz'])->name('quizzes.delete');
 });
 
 require __DIR__.'/auth.php';
