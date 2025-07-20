@@ -8,6 +8,7 @@ use App\Models\Quiz;
 use App\Models\Question;
 use App\Models\Choice;
 use App\Models\Lesson;
+use App\Models\Note;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -40,6 +41,11 @@ class QuizController extends Controller
             'description' => 'required|string',
             'choices_type' => 'required|in:text,media',
             'lesson_id' => 'required',
+            
+            'notes' => 'required|array|min:1',
+            'notes.*.note_text' => 'required|string',
+            'notes.*.media' => 'nullable|file|mimes:jpeg,png,jpg,webp,gif,mp4,webm|max:10240',
+
             'questions' => 'required|array|min:1',
             'questions.*.question_text' => 'required|string',
             'questions.*.choices' => 'required|array|min:2',
@@ -55,6 +61,19 @@ class QuizController extends Controller
                 'choices_type' => $validated['choices_type'],
                 'lesson_id' => $validated['lesson_id']
             ]);
+
+            foreach ($validated['notes'] as $index => $noteData) {
+                $mediaPath = null;
+                if (isset($request->file('notes')[$index]['media'])) {
+                    $mediaPath = $request->file('notes')[$index]['media']
+                        ->store('note-media', 'public');
+                }
+
+                $note = $quiz->notes()->create([
+                    'note_text' => $noteData['note_text'],
+                    'media_path' => $mediaPath
+                ]);
+            }
 
             foreach ($validated['questions'] as $index => $questionData) {
                 $mediaPath = null;
@@ -106,8 +125,15 @@ class QuizController extends Controller
                     ->with(['choices' => function ($q) {
                         $q->orderBy('id', 'asc');
                     }]);
+            },
+            'notes' => function ($query) {
+                $query->orderBy('id', 'asc');
             }
         ])->findOrFail($quizId);
+
+        // $quiz = Quiz::findOrFail($quizId);
+
+        Log::info($quiz->notes);
 
         $lessons = Lesson::get();
 
@@ -127,6 +153,16 @@ class QuizController extends Controller
                 'description' => 'required|string',
                 'choices_type' => 'required|in:media,text',
                 'lesson_id' => 'required',
+
+                'notes' => 'required|array|min:1',
+                'notes.*.id' => 'nullable|exists:notes,id',
+                'notes.*.note_text' => 'required|string',
+                'notes.*.media' => 'nullable|file|mimes:jpeg,png,jpg,webp,gif,mp4,webm|max:10240',
+                'notes.*.existing_media' => 'nullable|string',
+                'notes.*.remove_media' => 'nullable|string',
+                'deleted_notes' => 'nullable|string',
+
+
                 'questions' => 'required|array|min:1',
                 'questions.*.id' => 'nullable|exists:questions,id',
                 'questions.*.question_text' => 'required|string',
@@ -147,6 +183,58 @@ class QuizController extends Controller
                 'choices_type' => $validated['choices_type'],
                 'lesson_id' => $validated['lesson_id']
             ]);
+
+            // Keep track of processed questions and choices to remove deleted ones
+            $processedNoteIds = [];
+
+            foreach ($validated['notes'] as $index => $noteData) {
+                // Handle existing or create new note
+                if (isset($noteData['id'])) {
+                    $note = Note::find($noteData['id']);
+                } else {
+                    $note = new Note();
+                }
+
+                // Handle media
+                $mediaPath = $note->media_path; // Keep existing path by default
+
+                // Handle media removal if requested
+                if (!empty($noteData['remove_media'])) {
+                    Log::info('Removing media for note ID: ' . $note->id);
+                    if ($note->media_path) {
+                        Storage::disk('public')->delete($note->media_path);
+                    }
+                    $mediaPath = null;
+                }
+                // Handle new media upload
+                elseif (isset($request->file('notes')[$index]['media'])) {
+                    // Remove old media if exists
+                    if ($note->media_path) {
+                        Storage::disk('public')->delete($note->media_path);
+                    }
+                    $mediaPath = $request->file('notes')[$index]['media']
+                        ->store('note-media', 'public');
+                }
+
+                // Update or create note
+                $note->note_text = $noteData['note_text'];
+                $note->media_path = $mediaPath;
+                $note->quiz_id = $quiz->id;
+                $note->save();
+
+                $processedNoteIds[] = $note->id;
+            }
+
+            // Remove notes and choices that were deleted in the UI
+            Note::where('quiz_id', $quiz->id)
+                ->whereNotIn('id', $processedNoteIds)
+                ->get()
+                ->each(function ($note) {
+                    if ($note->media_path) {
+                        Storage::disk('public')->delete($note->media_path);
+                    }
+                    $note->delete();
+                });
 
             // Keep track of processed questions and choices to remove deleted ones
             $processedQuestionIds = [];
@@ -263,6 +351,13 @@ class QuizController extends Controller
                 }
             }
 
+            // delete related media files
+            foreach ($quiz->notes as $note) {
+                if ($note->media_path) {
+                    Storage::disk('public')->delete($note->media_path);
+                }
+            }
+
             // this assumes you have proper `onDelete('cascade')` on your foreign keys in the DB,
             // or `->cascadeDeletes()` on Eloquent relationships if you prefer soft-deletes.
             $quiz->delete();
@@ -277,7 +372,8 @@ class QuizController extends Controller
         }
     }
 
-    public function storeLesson() {
+    public function storeLesson()
+    {
         $validated = request()->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string'
