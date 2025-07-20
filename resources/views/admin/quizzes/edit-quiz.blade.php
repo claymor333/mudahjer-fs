@@ -75,8 +75,8 @@
                             <span class="label-text font-medium text-lg">Choices Type</span>
                         </legend>
                         <select id="quiz-choices-type" class="w-full select select-bordered">
-                            <option value="text" {{ $quiz->choices_type == 'text' ? 'selected' : '' }}>Question and Text Choices</option>
-                            <option value="media" {{ $quiz->choices_type == 'media' ? 'selected' : '' }}>Question and Media Choices</option>
+                            <option value="text" {{ $quiz->choices_type == 'text' ? 'selected' : '' }}>Questions with Text Choices</option>
+                            <option value="media" {{ $quiz->choices_type == 'media' ? 'selected' : '' }}>Question with Media Choices</option>
                         </select>
 
                         <legend class="fieldset-legend">
@@ -312,35 +312,6 @@
                 if (!validateStep(currentStep)) {
                     return;
                 }
-                const title = $('#quiz-title').val().trim();
-                const titleV = $('#quiz-title-val');
-
-                const description = $('#quiz-description').val().trim();
-                const descriptionV = $('#quiz-description-val');
-                
-                const lessonVal = $('#quiz-lesson').val();
-                const lessonSelectV = $('#quiz-lesson-val');
-
-                if (!title) {
-                    $('#quiz-title').addClass('input-error');
-                    titleV.removeClass('hidden').addClass('!visible text-error');
-
-                    return;
-                }
-
-                if (!description) {
-                    $('#quiz-description').addClass('input-error');
-                    descriptionV.removeClass('hidden').addClass('!visible text-error');
-
-                    return;
-                }
-
-                if (!lessonVal) {
-                    $('#quiz-lesson').addClass('input-error');
-                    lessonSelectV.removeClass('hidden').addClass('!visible text-error');
-
-                    return;
-                }
 
                 currentStep = 2;
 
@@ -475,13 +446,13 @@
                                 <span class="font-medium text-lg">Note Text</span>
                             </legend>
                             <input type="text" id="note-text-${noteId}" name="notes[${nextNumber-1}][note_text]" class="w-full input input-bordered validator" placeholder="Enter your note..." value="${noteText}" required>
-                            <p id="note-text-val-${noteId}" class="validator-hint hidden">Note text is required.</p>
+                            <p id="note-text-val-${noteId}" class="text-error hidden">Note text is required.</p>
 
                             <legend class="fieldset-legend">
                                 <span class="font-medium text-lg">Media</span>
                             </legend>
-                            <input type="file" id="note-media-${noteId}" name="notes[${nextNumber-1}][media]" class="w-full file-input file-input-bordered" accept="image/*,video/*" onchange="previewMedia(this, '${noteId}')" required>
-                            <p id="note-media-val-${noteId}" class="validator-hint hidden">Media file is required.</p>
+                            <input type="file" id="note-media-${noteId}" name="notes[${nextNumber-1}][media]" class="w-full file-input file-input-bordered validator" accept="image/*,video/*" onchange="previewMedia(this, '${noteId}')" required>
+                            <p id="note-media-val-${noteId}" class="text-error hidden">Media file is required.</p>
                             <div class="media-preview mt-4" id="media-preview-${noteId}">
                                 ${mediaPath ? `
                                     <div class="media-preview relative">
@@ -516,149 +487,216 @@
         function addQuestion(existingId = null, questionText = '', mediaPath = null, choices = []) {
             const nextNumber = questions.length + 1;
             const questionId = existingId || `question-${Date.now()}`;
-            
+            const choicesType = $('#quiz-choices-type').val();
+
             const questionHtml = `
-                <div class="question-card card bg-base-200 shadow-lg" id="${questionId}" data-sequence="${nextNumber}" ${existingId ? `data-existing-id="${existingId}"` : ''}>
-                    <div class="card-body">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-xl font-bold">Question ${nextNumber}</h3>
-                            <button type="button" class="btn btn-sm btn-circle btn-ghost" onclick="removeQuestion('${questionId}')">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                </svg>
-                            </button>
+            <div class="question-card card bg-base-200 shadow-lg" id="${questionId}" data-sequence="${nextNumber}" ${existingId ? `data-existing-id="${existingId}"` : ''}>
+                <div class="card-body">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold">Question ${nextNumber}</h3>
+                        <button type="button" class="btn btn-sm btn-circle btn-ghost" onclick="removeQuestion('${questionId}')">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <fieldset class="fieldset">
+                        <legend class="fieldset-legend">Question Text</legend>
+                        <input type="text" id="question-text-${questionId}" class="w-full input input-bordered validator"
+                            placeholder="Enter question text..." value="${questionText || ''}" required>
+                        <p id="question-text-val-${questionId}" class="hidden text-error text-xs mt-1">Question text is required.</p>
+
+                        <legend class="fieldset-legend mt-4">Media (Optional)</legend>
+                        <input type="file" id="question-media-${questionId}" class="w-full file-input file-input-bordered"
+                            accept="image/*,video/*" onchange="previewMedia(this, '${questionId}')">
+                        <div class="media-preview mt-2" id="media-preview-${questionId}">
+                            ${mediaPath ? renderMediaPreview(mediaPath, questionId) : ''}
                         </div>
 
-                        <input type="hidden" name="questions[${nextNumber-1}][id]" value="${existingId || ''}">
-                        
-                        <fieldset class="fieldset">
-                            <legend class="fieldset-legend">
-                                <span class="font-medium text-lg">Question Text</span>
-                            </legend>
-                            <input type="text" id="question-text-${questionId}" name="questions[${nextNumber-1}][question_text]" class="w-full input input-bordered validator" 
-                                placeholder="Enter your question..." required value="${questionText}">
-                            <p id="question-text-val-${questionId}" class="validator-hint hidden">Question text is required.</p>
+                        <legend class="fieldset-legend mt-4">Answer Choices</legend>
+                        <p id="choice-radio-val-${questionId}" class="text-error hidden text-xs mb-2">
+                            Select a correct answer.
+                        </p>
+                        <div class="choices-container space-y-3" id="choices-${questionId}">
+                            ${renderChoices(choices, choicesType, questionId)}
+                        </div>
 
-                            <legend class="fieldset-legend">
-                                <span class="font-medium text-lg">Media (Optional)</span>
-                            </legend>
-                            <input type="file" id="question-media-${questionId}" name="questions[${nextNumber-1}][media]" class="w-full file-input file-input-bordered" 
-                                accept="image/*,video/*" onchange="previewMedia(this, '${questionId}')">
-                            <div class="media-preview mt-4" id="media-preview-${questionId}">
-                                ${mediaPath ? `
-                                    <div class="media-preview relative">
-                                        ${mediaPath.match(/\.(jpg|jpeg|png|gif|webp)$/i) 
-                                            ? `<img src="/storage/${mediaPath}" class="w-full max-w-md h-48 object-cover rounded-lg mx-auto block" onclick="showPreviewModal(this)">` 
-                                            : `<video controls class="w-full max-w-md h-48 object-cover rounded-lg mx-auto block" onclick="showPreviewModal(this)">
-                                                <source src="/storage/${mediaPath}" type="video/mp4">
-                                            </video>`
-                                        }
-                                        <button type="button" class="btn btn-sm btn-circle btn-error absolute top-2 right-2" onclick="removeMedia('${questionId}')">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                            </svg>
-                                        </button>
-                                        <input type="hidden" name="questions[${nextNumber-1}][existing_media]" value="${mediaPath}">
-                                    </div>
-                                ` : ''}
-                            </div>
-
-                            <legend class="legend">
-                                <span class="font-medium text-lg">Answer Choices</span>
-                            </legend>
-                            <div class="choices-container space-y-3" id="choices-${questionId}">
-                                ${choices.length > 0 ? choices.map((choice, index) => `
-                                    <div class="choice-item flex items-center gap-3 p-3 bg-base-100 rounded-lg" ${choice.id ? `data-choice-id="${choice.id}"` : ''}>
-                                        <input type="hidden" name="questions[${nextNumber-1}][choices][${index}][id]" value="${choice.id || ''}">
-                                        <input type="radio" name="questions[${nextNumber-1}][correct_choice]" class="radio radio-primary" 
-                                            value="${index}" ${choice.is_correct ? 'checked' : ''}>
-                                        <input type="text" name="questions[${nextNumber-1}][choices][${index}][choice_text]" 
-                                            class="input input-bordered flex-1 validator" placeholder="Choice ${index + 1}" 
-                                            required value="${choice.choice_text}">
-                                        <button type="button" class="btn btn-sm btn-circle btn-ghost ${choices.length <= 2 ? 'opacity-50' : ''}" 
-                                            onclick="removeChoice(this)">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                `).join('') : `
-                                    <div class="choice-item flex items-center gap-3 p-3 bg-base-100 rounded-lg">
-                                        <input type="radio" name="questions[${nextNumber-1}][correct_choice]" class="radio radio-primary" value="0">
-                                        <input type="text" name="questions[${nextNumber-1}][choices][0][choice_text]" 
-                                            class="input input-bordered flex-1 validator" placeholder="Choice 1" required>
-                                        <button type="button" class="btn btn-sm btn-circle btn-ghost opacity-50" onclick="removeChoice(this)">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                    <div class="choice-item flex items-center gap-3 p-3 bg-base-100 rounded-lg">
-                                        <input type="radio" name="questions[${nextNumber-1}][correct_choice]" class="radio radio-primary" value="1">
-                                        <input type="text" name="questions[${nextNumber-1}][choices][1][choice_text]" 
-                                            class="input input-bordered flex-1 validator" placeholder="Choice 2" required>
-                                        <button type="button" class="btn btn-sm btn-circle btn-ghost opacity-50" onclick="removeChoice(this)">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                `}
-                            </div>
-                            <button type="button" class="btn btn-sm btn-outline btn-primary mt-3" onclick="addChoice('${questionId}')">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                </svg>
-                                Add Choice
-                            </button>
-                        </fieldset>
-                    </div>
+                        <button type="button" class="btn btn-sm btn-outline btn-primary mt-3" onclick="addChoice('${questionId}')">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            Add Choice
+                        </button>
+                    </fieldset>
                 </div>
+            </div>
             `;
 
             $('#questions-carousel').append(questionHtml);
             questions.push(questionId);
-            
-            // If this is a new question (not loaded from existing data), navigate to it
+
             if (!existingId) {
                 navigateToQuestion(questions.length - 1);
                 updateQuestionCounter();
                 updateNavigationButtons();
             }
-            
+
             return questionId;
         }
 
-        function createChoiceHtml(questionId, index, choice = null) {
-            return `
-                <div class="choice-item flex items-center gap-3 p-3 bg-base-100 rounded-lg" ${choice?.id ? `data-choice-id="${choice.id}"` : ''}>
-                    <input type="radio" name="correct-${questionId}" class="radio radio-primary" 
-                        value="${index}" ${choice?.isCorrect ? 'checked' : ''}>
-                    <input type="text" class="input input-bordered flex-1 validator" 
-                        placeholder="Choice ${index + 1}" required value="${choice?.text || ''}">
-                    <button type="button" class="btn btn-sm btn-circle btn-ghost ${index < 2 ? 'opacity-50' : ''}" onclick="removeChoice(this)">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-            `;
+
+        /**
+         * Render the choices HTML
+         * @param {Array} choices
+         * @param {string} choicesType
+         * @param {string} questionId
+         * @returns {string}
+         */
+        function renderChoices(choices, choicesType, questionId) {
+            if (!choices || !choices.length) {
+                choices = [
+                    { id: null, choice_text: '', choice_media: '', is_correct: false },
+                    { id: null, choice_text: '', choice_media: '', is_correct: false }
+                ];
+            }
+
+            return choices.map((choice, index) => {
+                const isChecked = choice.is_correct ? 'checked' : '';
+
+                const value = choicesType === 'media'
+                    ? choice.choice_media || ''
+                    : choice.choice_text || '';
+
+                return `
+                <div class="choice-item flex-col p-3 bg-base-100 rounded-lg" ${choice.id ? `data-choice-id="${choice.id}"` : ''}>
+                    <div class="flex items-center gap-3">
+                        <input type="radio" name="questions[${index}][correct_choice]" class="radio radio-primary" value="${index}" ${isChecked}>
+                        ${renderChoiceInput(value, choicesType)}
+                        <button type="button" class="btn btn-sm btn-circle btn-ghost opacity-50" onclick="removeChoice(this)">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <p class="choice-validator-input text-error hidden text-xs mt-1"></p>
+                </div>`;
+            }).join('');
         }
 
-        function createMediaPreview(mediaPath) {
-            const isVideo = /\.(mp4|webm)$/i.test(mediaPath);
-            if (isVideo) {
+        /**
+         * Render a single choice input depending on type
+         * @param {string} value
+         * @param {string} type - text|media
+         * @returns {string}
+         */
+        function renderChoiceInput(value, type) {
+            if (type === 'media') {
+                const hasMedia = value && value.trim() !== '';
+                const src = hasMedia ? `/storage/${value}` : '';
+
                 return `
-                    <video controls class="w-full max-w-md h-48 object-cover rounded-lg mx-auto block" onclick="showPreviewModal(this)">
-                        <source src="/storage/${mediaPath}" type="video/${mediaPath.split('.').pop()}">
-                    </video>
-                `;
-            } else {
-                return `
-                    <img src="/storage/${mediaPath}" class="w-full max-w-md h-48 object-cover rounded-lg mx-auto block" onclick="showPreviewModal(this)">
-                `;
+                <div class="indicator w-full relative">
+                    <span class="indicator-item choice-image !p-0 badge badge-secondary preview-badge w-8 h-8 overflow-hidden ${hasMedia ? '' : 'hidden'}">
+                        <img src="${src}" alt="preview" class="w-full h-full object-cover cursor-pointer" onclick="showPreviewModal(this)"/>
+                    </span>
+                    <input type="file" class="file-input file-input-bordered flex-1 validator choice-media-input" accept="image/*,video/*" ${hasMedia ? '' : 'required'}>
+                    ${hasMedia ? `<input type="hidden" name="existing_choice_media" value="${value}">` : ''}
+                </div>`;
             }
+
+            // text choice
+            return `
+            <input type="text" class="input input-bordered flex-1 validator" placeholder="Choice text" value="${value || ''}" required>`;
         }
+
+        /**
+         * Render media preview HTML
+         * @param {string} path
+         * @param {string} questionId
+         * @returns {string}
+         */
+        function renderMediaPreview(path, questionId) {
+            const isImage = path.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+            const src = `/storage/${path}`;
+            return `
+            <div class="media-preview relative">
+                ${isImage
+                    ? `<img src="${src}" class="w-full max-w-md h-48 object-cover rounded-lg mx-auto block" onclick="showPreviewModal(this)">`
+                    : `<video controls class="w-full max-w-md h-48 object-cover rounded-lg mx-auto block" onclick="showPreviewModal(this)">
+                        <source src="${src}" type="video/mp4">
+                    </video>`}
+                <button type="button" class="btn btn-sm btn-circle btn-error absolute top-2 right-2" onclick="removeMedia('${questionId}')">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+                <input type="hidden" name="questions[][existing_media]" value="${path}">
+            </div>`;
+        }
+
+        /**
+         * Update all questions when choices_type changes
+         * @param {string} newType
+         */
+        function updateQuestionsForChoicesType(newType) {
+            questions.forEach(questionId => {
+                const $questionCard = $(`#${questionId}`);
+
+                const $choicesContainer = $questionCard.find(`#choices-${questionId}`);
+                $choicesContainer.empty();
+
+                const defaultChoices = [
+                    {id: null, choice_text: '', is_correct: false},
+                    {id: null, choice_text: '', is_correct: false}
+                ];
+
+                const newChoicesHtml = renderChoices(defaultChoices, newType, questionId);
+                $choicesContainer.html(newChoicesHtml);
+            });
+        }
+
+        $(document).on('change', '#quiz-choices-type', function () {
+            const newType = $(this).val();
+
+            if (!window.confirm('Changing the choices type will reset all existing choices.\n\nText and media in all questions will be deleted.\n\nAre you sure you want to continue?')) {
+                // Restore the previous value
+                this.value = this.dataset.previousValue || 'text';
+                return;
+            }
+
+            updateQuestionsForChoicesType(newType);
+            this.dataset.previousValue = newType;
+        });
+
+
+        $(document).on('change', '.choice-media-input', function () {
+            const fileInput = this;
+            const file = fileInput.files[0];
+            const $container = $(fileInput).closest('.indicator');
+            const $previewBadge = $container.find('.preview-badge');
+            const $img = $previewBadge.find('img');
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    $img.attr('src', e.target.result);
+                    $previewBadge.show();
+                };
+                reader.readAsDataURL(file);
+            } else {
+                $img.attr('src', '');
+                $previewBadge.hide();
+            }
+        });
+
+        $(document).on('change', '#quiz-lesson', function () {
+            const $lesson = $('#quiz-lesson');
+
+            // optionally apply success color
+            $lesson.css('--input-color', 'var(--color-success)');
+        });
+
 
         function removeQuestion(questionId) {
             const questionIndex = questions.indexOf(questionId);
@@ -768,96 +806,155 @@
 
         function validateStep(step) {
             let isValid = true;
+            console.log(`🚀 Validating Step ${step}`);
 
-            console.log(`📝 Validating step ${step} …`);
+            if (step === 1) {
+                console.log('📋 Step 1: Quiz basic info');
 
-            if (step === 2) {
+                const title = $('#quiz-title').val().trim();
+                if (!title) {
+                    console.warn('❌ Title is empty');
+                    $('#quiz-title').addClass('input-error');
+                    $('#quiz-title-val').removeClass('hidden');
+                    isValid = false;
+                } else {
+                    console.log('✅ Title OK');
+                    $('#quiz-title').removeClass('input-error');
+                    $('#quiz-title-val').addClass('hidden');
+                }
+
+                const description = $('#quiz-description').val().trim();
+                if (!description) {
+                    console.warn('❌ Description is empty');
+                    $('#quiz-description').addClass('input-error');
+                    $('#quiz-description-val').removeClass('hidden');
+                    isValid = false;
+                } else {
+                    console.log('✅ Description OK');
+                    $('#quiz-description').removeClass('input-error');
+                    $('#quiz-description-val').addClass('hidden');
+                }
+
+                const lessonVal = $('#quiz-lesson').val();
+                if (!lessonVal) {
+                    console.warn('❌ Lesson not selected');
+                    $('#quiz-lesson').addClass('input-error');
+                    $('#quiz-lesson-val').removeClass('hidden');
+                    isValid = false;
+                } else {
+                    console.log('✅ Lesson OK');
+                    $('#quiz-lesson').removeClass('input-error');
+                    $('#quiz-lesson-val').addClass('hidden');
+                }
+
+            } else if (step === 2) {
+                console.log('📋 Step 2: Notes');
                 notes.forEach((noteId) => {
                     const noteText = $(`#note-text-${noteId}`).val().trim();
                     const noteMediaInput = $(`#note-media-${noteId}`)[0].files[0];
                     const hasMediaPreview = $(`#media-preview-${noteId}`).find('img, video').length > 0;
 
-                    console.log(`🔷 Note [${noteId}]: text="${noteText}", fileInput=`, noteMediaInput, ', hasPreview=', hasMediaPreview);
-
-                    // note text
                     if (!noteText) {
-                        console.log(`❌ Note [${noteId}] - Missing text`);
+                        console.warn(`❌ Note ${noteId} text is empty`);
                         $(`#note-text-${noteId}`).addClass('input-error');
-                        $(`#note-text-val-${noteId}`).removeClass('hidden').addClass('!visible text-error');
+                        $(`#note-text-val-${noteId}`).removeClass('hidden');
                         isValid = false;
                     } else {
-                        console.log(`✅ Note [${noteId}] - Text OK`);
+                        console.log(`✅ Note ${noteId} text OK`);
                         $(`#note-text-${noteId}`).removeClass('input-error');
-                        $(`#note-text-val-${noteId}`).addClass('hidden').removeClass('!visible text-error');
+                        $(`#note-text-val-${noteId}`).addClass('hidden');
                     }
 
-                    // note media
                     if (!noteMediaInput && !hasMediaPreview) {
-                        console.log(`❌ Note [${noteId}] - Missing media`);
+                        console.warn(`❌ Note ${noteId} media missing`);
                         $(`#note-media-${noteId}`).addClass('input-error');
-                        $(`#note-media-val-${noteId}`).removeClass('hidden').addClass('!visible text-error');
+                        $(`#note-media-val-${noteId}`).removeClass('hidden');
                         isValid = false;
                     } else {
-                        console.log(`✅ Note [${noteId}] - Media OK`);
+                        console.log(`✅ Note ${noteId} media OK`);
                         $(`#note-media-${noteId}`).removeClass('input-error');
-                        $(`#note-media-val-${noteId}`).addClass('hidden').removeClass('!visible text-error');
+                        $(`#note-media-val-${noteId}`).addClass('hidden');
                     }
                 });
-            }
 
-            else if (step === 3) {
+            } else if (step === 3) {
+                console.log('📋 Step 3: Questions');
+
                 questions.forEach((questionId, index) => {
                     const questionText = $(`#question-text-${questionId}`).val().trim();
-                    const hasCorrectAnswer = $(`input[name="questions[${index}][correct_choice]"]:checked`).length > 0;
+                    const choicesType = $('#quiz-choices-type').val();
+                    const $questionRadioValidator = $(`#choice-radio-val-${questionId}`);
 
-                    const choices = $(`#choices-${questionId} input[type="text"]`);
+                    let hasCorrectAnswer = $(`input[name="questions[${index}][correct_choice]"]:checked`).length > 0;
+                    let hasEmptyChoice = false;
 
-                    console.log(`🔷 Question [${questionId}]: text="${questionText}", hasCorrectAnswer=${hasCorrectAnswer}`);
-
-                    // question text
                     if (!questionText) {
-                        console.log(`❌ Question [${questionId}] - Missing text`);
+                        console.warn(`❌ Question ${index + 1} text is empty`);
                         $(`#question-text-${questionId}`).addClass('input-error');
-                        $(`#question-text-val-${questionId}`).removeClass('hidden').addClass('!visible text-error');
+                        $(`#question-text-val-${questionId}`).removeClass('hidden');
                         isValid = false;
                     } else {
-                        console.log(`✅ Question [${questionId}] - Text OK`);
+                        console.log(`✅ Question ${index + 1} text OK`);
                         $(`#question-text-${questionId}`).removeClass('input-error');
-                        $(`#question-text-val-${questionId}`).addClass('hidden').removeClass('!visible text-error');
+                        $(`#question-text-val-${questionId}`).addClass('hidden');
                     }
 
-                    // choices
-                    let hasEmptyChoice = false;
-                    choices.each(function () {
-                        if (!$(this).val().trim()) {
-                            console.log(`❌ Question [${questionId}] - Empty choice detected`);
-                            $(this).addClass('input-error');
-                            hasEmptyChoice = true;
+                    $(`#choices-${questionId} .choice-item`).each(function () {
+                        const $choiceItem = $(this);
+                        const $choiceValidatorInput = $choiceItem.find('.choice-validator-input');
+                        const $radioInput = $choiceItem.find('input[type="radio"]');
+
+                        if (choicesType === 'media') {
+                            const fileInput = $choiceItem.find('input[type="file"]')[0];
+                            if (!fileInput || !fileInput.files[0]) {
+                                console.warn(`❌ Question ${index + 1} choice media missing`);
+                                $choiceValidatorInput.text('Please select a file.').removeClass('hidden');
+                                $(fileInput).addClass('input-error');
+                                hasEmptyChoice = true;
+                            } else {
+                                console.log(`✅ Question ${index + 1} choice media OK`);
+                                $choiceValidatorInput.addClass('hidden');
+                                $(fileInput).removeClass('input-error');
+                            }
                         } else {
-                            $(this).removeClass('input-error');
+                            const textInput = $choiceItem.find('input[type="text"]');
+                            if (!textInput.val().trim()) {
+                                console.warn(`❌ Question ${index + 1} choice text is empty`);
+                                textInput.addClass('input-error');
+                                $choiceValidatorInput.text('This choice cannot be empty.').removeClass('hidden');
+                                hasEmptyChoice = true;
+                            } else {
+                                console.log(`✅ Question ${index + 1} choice text OK`);
+                                textInput.removeClass('input-error');
+                                $choiceValidatorInput.addClass('hidden');
+                            }
+                        }
+
+                        if (!$radioInput.is(':checked')) {
+                            $radioInput.addClass('input-error').removeClass('radio-primary');
+                        } else {
+                            $radioInput.removeClass('input-error').addClass('radio-primary');
                         }
                     });
 
-                    if (hasEmptyChoice) {
-                        console.log(`❌ Question [${questionId}] - One or more choices empty`);
+                    if (!hasCorrectAnswer) {
+                        console.warn(`❌ Question ${index + 1} has no correct answer selected`);
+                        $questionRadioValidator.removeClass('hidden');
                         isValid = false;
                     } else {
-                        console.log(`✅ Question [${questionId}] - All choices filled`);
+                        console.log(`✅ Question ${index + 1} correct answer OK`);
+                        $questionRadioValidator.addClass('hidden');
                     }
 
-                    if (!hasCorrectAnswer) {
-                        console.log(`❌ Question [${questionId}] - No correct answer selected`);
+                    if (hasEmptyChoice) {
                         isValid = false;
-                    } else {
-                        console.log(`✅ Question [${questionId}] - Correct answer selected`);
                     }
                 });
             }
 
-            console.log(`🎯 Step ${step} validation result: ${isValid ? '✅ valid' : '❌ invalid'}`);
+            console.log(`🎯 Step ${step} validation result: ${isValid ? '✅ Valid' : '❌ Invalid'}`);
             return isValid;
         }
-
 
 		function updateChoiceRemoveButtons(questionId) {
             const choicesContainer = $(`#choices-${questionId}`);
@@ -1062,8 +1159,8 @@
 			}
 		}
 
-		function previewMedia(input, questionId) {
-            const preview = $(`#media-preview-${questionId}`);
+		function previewMedia(input, elementId) {
+            const preview = $(`#media-preview-${elementId}`);
             preview.empty();
 
             if (input.files && input.files[0]) {
@@ -1084,7 +1181,7 @@
                 }
                 
                 const removeBtn = $(`
-                    <button type="button" class="btn btn-sm btn-circle btn-error absolute top-2 right-2" onclick="removeMedia('${questionId}')">
+                    <button type="button" class="btn btn-sm btn-circle btn-error absolute top-2 right-2" onclick="removeMedia('${elementId}')">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
@@ -1332,24 +1429,6 @@
                 const existingId = questionCard.data('existing-id');
                 const questionText = questionCard.find('input[type="text"]').first().val().trim();
                 const correctAnswer = questionCard.find('input[type="radio"]:checked').val();
-                const choices = [];
-                let choiceCounter = 0;
-
-                questionCard.find('.choice-item').each(function() {
-                    const $choice = $(this);
-                    const choiceText = $choice.find('input[type="text"]').val().trim();
-                    const choiceId = $choice.data('choice-id');
-                    
-                    formData.append(`questions[${index}][choices][${choiceCounter}][choice_text]`, choiceText);
-                    if (choiceId) {
-                        formData.append(`questions[${index}][choices][${choiceCounter}][id]`, choiceId);
-                    }
-                    choiceCounter++;
-                });
-
-                const mediaInput = questionCard.find('input[type="file"]')[0];
-                const mediaFile = mediaInput?.files[0];
-                const removeMedia = questionCard.find('.media-preview').length === 0 && questionCard.attr('data-has-media');
 
                 if (existingId) {
                     formData.append(`questions[${index}][id]`, existingId);
@@ -1357,17 +1436,41 @@
                 formData.append(`questions[${index}][question_text]`, questionText);
                 formData.append(`questions[${index}][correct_choice]`, correctAnswer);
 
-                // Handle media file
+                // handle question-level media
+                const mediaInput = questionCard.find(`input[type="file"]#question-media-${questionId}`)[0];
+                const mediaFile = mediaInput?.files?.[0] || null;
+
                 if (mediaFile) {
                     formData.append(`questions[${index}][media]`, mediaFile);
                 }
-
-                // Handle media removal
                 if (questionCard.attr('data-remove-media') === 'true') {
                     formData.append(`questions[${index}][remove_media]`, '1');
                 }
-            });
 
+                // handle choices
+                questionCard.find('.choice-item').each(function (choiceIdx) {
+                    const $choice = $(this);
+                    const choiceId = $choice.data('choice-id');
+
+                    if (choiceId) {
+                        formData.append(`questions[${index}][choices][${choiceIdx}][id]`, choiceId);
+                    }
+
+                    if (choicesType === 'text') {
+                        const choiceText = $choice.find('input[type="text"]').val().trim();
+                        formData.append(`questions[${index}][choices][${choiceIdx}][choice_text]`, choiceText);
+                    } else if (choicesType === 'media') {
+                        const fileInput = $choice.find('.choice-media-input')[0];
+                        const file = fileInput?.files?.[0];
+                        if (file) {
+                            formData.append(`questions[${index}][choices][${choiceIdx}][choice_media]`, file);
+                        }
+                        if ($choice.attr('data-remove-media') === 'true') {
+                            formData.append(`questions[${index}][choices][${choiceIdx}][remove_media]`, '1');
+                        }
+                    }
+                });
+            });
 			console.log('Form Data:', formData);
 
             $.ajax({
