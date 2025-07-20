@@ -117,7 +117,7 @@ class QuizController extends Controller
         }
     }
 
-    public function editQuiz($quizId)
+    public function editQuiz($quiz_id)
     {
         $quiz = Quiz::with([
             'questions' => function ($query) {
@@ -129,9 +129,9 @@ class QuizController extends Controller
             'notes' => function ($query) {
                 $query->orderBy('id', 'asc');
             }
-        ])->findOrFail($quizId);
+        ])->findOrFail($quiz_id);
 
-        // $quiz = Quiz::findOrFail($quizId);
+        // $quiz = Quiz::findOrFail($quiz_id);
 
         Log::info($quiz->notes);
 
