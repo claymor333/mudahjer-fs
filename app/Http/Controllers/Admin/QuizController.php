@@ -155,163 +155,182 @@ class QuizController extends Controller
 
 
     public function updateQuiz(Request $request, $id)
-{
-    $quiz = Quiz::findOrFail($id);
+    {
+        $quiz = Quiz::findOrFail($id);
 
-    $validated = $request->validate([
-        'title' => 'required|string|max:255',
-        'description' => 'required|string',
-        'choices_type' => 'required|in:media,text',
-        'lesson_id' => 'required',
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'choices_type' => 'required|in:media,text',
+            'lesson_id' => 'required',
 
-        'notes' => 'required|array|min:1',
-        'notes.*.id' => 'nullable|exists:notes,id',
-        'notes.*.note_text' => 'required|string',
-        'notes.*.media' => 'nullable|file|mimes:jpeg,png,jpg,webp,gif,mp4,webm|max:10240',
-        'notes.*.remove_media' => 'nullable',
-        'deleted_notes' => 'nullable',
+            'notes' => 'required|array|min:1',
+            'notes.*.id' => 'nullable|exists:notes,id',
+            'notes.*.note_text' => 'required|string',
+            'notes.*.media' => 'nullable|file|mimes:jpeg,png,jpg,webp,gif,mp4,webm|max:10240',
+            'notes.*.remove_media' => 'nullable',
+            'deleted_notes' => 'nullable',
 
-        'questions' => 'required|array|min:1',
-        'questions.*.id' => 'nullable|exists:questions,id',
-        'questions.*.question_text' => 'required|string',
-        'questions.*.choices' => 'required|array|min:2',
-        'questions.*.correct_choice' => 'required|numeric',
-        'questions.*.media' => 'nullable|file|mimes:jpeg,png,jpg,webp,gif,mp4,webm|max:10240',
-        'questions.*.remove_media' => 'nullable',
-        'deleted_questions' => 'nullable',
-    ]);
-
-    DB::beginTransaction();
-
-    try {
-        $quiz->update([
-            'title' => $validated['title'],
-            'description' => $validated['description'],
-            'choices_type' => $validated['choices_type'],
-            'lesson_id' => $validated['lesson_id'],
+            'questions' => 'required|array|min:1',
+            'questions.*.id' => 'nullable|exists:questions,id',
+            'questions.*.question_text' => 'required|string',
+            'questions.*.choices' => 'required|array|min:2',
+            'questions.*.correct_choice' => 'required|numeric',
+            'questions.*.media' => 'nullable|file|mimes:jpeg,png,jpg,webp,gif,mp4,webm|max:10240',
+            'questions.*.remove_media' => 'nullable',
+            'deleted_questions' => 'nullable',
         ]);
 
-        // Notes
-        $noteIds = [];
-        foreach ($validated['notes'] as $i => $noteData) {
-            $note = isset($noteData['id'])
-                ? Note::find($noteData['id'])
-                : new Note();
+        DB::beginTransaction();
 
-            $note->quiz_id = $quiz->id;
-            $note->note_text = $noteData['note_text'];
+        try {
+            $quiz->update([
+                'title' => $validated['title'],
+                'description' => $validated['description'],
+                'choices_type' => $validated['choices_type'],
+                'lesson_id' => $validated['lesson_id'],
+            ]);
 
-            // Media
-            if (!empty($noteData['remove_media'])) {
-                if ($note->media_path) Storage::disk('public')->delete($note->media_path);
-                $note->media_path = null;
-            } elseif ($request->file("notes.$i.media")) {
-                if ($note->media_path) Storage::disk('public')->delete($note->media_path);
-                $note->media_path = $request->file("notes.$i.media")->store('note-media', 'public');
-            }
+            // Notes
+            $noteIds = [];
+            foreach ($validated['notes'] as $i => $noteData) {
+                $note = isset($noteData['id'])
+                    ? Note::find($noteData['id'])
+                    : new Note();
 
-            $note->save();
-            $noteIds[] = $note->id;
-        }
+                $note->quiz_id = $quiz->id;
+                $note->note_text = $noteData['note_text'];
 
-        Note::where('quiz_id', $quiz->id)->whereNotIn('id', $noteIds)->get()->each(function ($note) {
-            if ($note->media_path) Storage::disk('public')->delete($note->media_path);
-            $note->delete();
-        });
-
-        // Questions & Choices
-        $questionIds = [];
-        $choiceIds = [];
-
-        foreach ($validated['questions'] as $qIdx => $qData) {
-            $question = isset($qData['id'])
-                ? Question::find($qData['id'])
-                : new Question();
-
-            $question->quiz_id = $quiz->id;
-            $question->question_text = $qData['question_text'];
-
-            // Question media
-            if (!empty($qData['remove_media'])) {
-                if ($question->media_path) Storage::disk('public')->delete($question->media_path);
-                $question->media_path = null;
-            } elseif ($request->file("questions.$qIdx.media")) {
-                if ($question->media_path) Storage::disk('public')->delete($question->media_path);
-                $question->media_path = $request->file("questions.$qIdx.media")->store('question-media', 'public');
-            }
-
-            $question->save();
-            $questionIds[] = $question->id;
-
-            // Choices
-            foreach ($qData['choices'] as $cIdx => $cData) {
-                $choice = isset($cData['id'])
-                    ? Choice::find($cData['id'])
-                    : new Choice();
-
-                $choice->question_id = $question->id;
-
-                if ($validated['choices_type'] === 'text') {
-                    $choice->choice_text = $cData['choice_text'];
-                    $choice->choice_media = null;
-                } else {
-                    $choice->choice_text = null;
-
-                    if (!empty($cData['remove_media'])) {
-                        if ($choice->choice_media) Storage::disk('public')->delete($choice->choice_media);
-                        $choice->choice_media = null;
-                    } elseif ($request->file("questions.$qIdx.choices.$cIdx.choice_media")) {
-                        if ($choice->choice_media) Storage::disk('public')->delete($choice->choice_media);
-                        $choice->choice_media = $request->file("questions.$qIdx.choices.$cIdx.choice_media")
-                            ->store('choice-media', 'public');
-                    }
+                // Media
+                if (!empty($noteData['remove_media'])) {
+                    if ($note->media_path) Storage::disk('public')->delete($note->media_path);
+                    $note->media_path = null;
+                } elseif ($request->file("notes.$i.media")) {
+                    if ($note->media_path) Storage::disk('public')->delete($note->media_path);
+                    $note->media_path = $request->file("notes.$i.media")->store('note-media', 'public');
                 }
 
-                $choice->is_correct = ($cIdx == $qData['correct_choice']);
-                $choice->save();
-                $choiceIds[] = $choice->id;
+                $note->save();
+                $noteIds[] = $note->id;
             }
+
+            Note::where('quiz_id', $quiz->id)->whereNotIn('id', $noteIds)->get()->each(function ($note) {
+                if ($note->media_path) Storage::disk('public')->delete($note->media_path);
+                $note->delete();
+            });
+
+            // Questions & Choices
+            $questionIds = [];
+            $choiceIds = [];
+
+            foreach ($validated['questions'] as $qIdx => $qData) {
+                $question = isset($qData['id'])
+                    ? Question::find($qData['id'])
+                    : new Question();
+
+                $question->quiz_id = $quiz->id;
+                $question->question_text = $qData['question_text'];
+
+                // Question media
+                if (!empty($qData['remove_media'])) {
+                    if ($question->media_path) Storage::disk('public')->delete($question->media_path);
+                    $question->media_path = null;
+                } elseif ($request->file("questions.$qIdx.media")) {
+                    if ($question->media_path) Storage::disk('public')->delete($question->media_path);
+                    $question->media_path = $request->file("questions.$qIdx.media")->store('question-media', 'public');
+                }
+
+                $question->save();
+                $questionIds[] = $question->id;
+
+                // Choices
+                foreach ($qData['choices'] as $cIdx => $cData) {
+                    $choice = isset($cData['id'])
+                        ? Choice::find($cData['id'])
+                        : new Choice();
+
+                    $choice->question_id = $question->id;
+
+                    if ($validated['choices_type'] === 'text') {
+                        $choice->choice_text = $cData['choice_text'];
+                        $choice->choice_media = null;
+                    } else {
+                        $choice->choice_text = null;
+
+                        if (!empty($cData['remove_media'])) {
+                            if ($choice->choice_media) Storage::disk('public')->delete($choice->choice_media);
+                            $choice->choice_media = null;
+                        } elseif ($request->file("questions.$qIdx.choices.$cIdx.choice_media")) {
+                            if ($choice->choice_media) Storage::disk('public')->delete($choice->choice_media);
+                            $choice->choice_media = $request->file("questions.$qIdx.choices.$cIdx.choice_media")
+                                ->store('choice-media', 'public');
+                        }
+                    }
+
+                    $choice->is_correct = ($cIdx == $qData['correct_choice']);
+                    $choice->save();
+                    $choiceIds[] = $choice->id;
+                }
+            }
+
+            Question::where('quiz_id', $quiz->id)->whereNotIn('id', $questionIds)->get()->each(function ($q) {
+                // Delete choices & their media first
+                $q->choices->each(function ($choice) {
+                    if ($choice->choice_media) {
+                        Storage::disk('public')->delete($choice->choice_media);
+                    }
+                    $choice->delete();
+                });
+
+                // Then delete question media
+                if ($q->media_path) {
+                    Storage::disk('public')->delete($q->media_path);
+                }
+
+                $q->delete();
+            });
+
+            Choice::whereIn('question_id', $questionIds)->whereNotIn('id', $choiceIds)->get()->each(function ($c) {
+                if ($c->choice_media) Storage::disk('public')->delete($c->choice_media);
+                $c->delete();
+            });
+
+            DB::commit();
+
+            session()->flash('success', `Quiz edited successfully!`);
+
+            return response()->json([
+                'success' => true,
+                'redirect' => route('admin.dashboard', ['message' => 'Quiz edited successfully!'])
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error("Quiz update failed: {$e->getMessage()}");
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update quiz. Please try again.',
+            ], 500);
         }
-
-        Question::where('quiz_id', $quiz->id)->whereNotIn('id', $questionIds)->get()->each(function ($q) {
-            if ($q->media_path) Storage::disk('public')->delete($q->media_path);
-            $q->delete();
-        });
-
-        Choice::whereIn('question_id', $questionIds)->whereNotIn('id', $choiceIds)->get()->each(function ($c) {
-            if ($c->choice_media) Storage::disk('public')->delete($c->choice_media);
-            $c->delete();
-        });
-
-        DB::commit();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Quiz updated successfully!',
-            'redirect' => route('admin.dashboard'),
-        ]);
-    } catch (\Throwable $e) {
-        DB::rollBack();
-        \Log::error("Quiz update failed: {$e->getMessage()}");
-        return response()->json([
-            'success' => false,
-            'message' => 'Failed to update quiz. Please try again.',
-        ], 500);
     }
-}
 
 
     public function deleteQuiz($id)
     {
         Log::info('Deleting quiz ID: ' . $id);
 
-        $quiz = Quiz::with('questions')->findOrFail($id);
+        $quiz = Quiz::with('questions.choices')->findOrFail($id);
 
         try {
             // delete related media files
             foreach ($quiz->questions as $question) {
                 if ($question->media_path) {
                     Storage::disk('public')->delete($question->media_path);
+                }
+
+                foreach ($question->choices as $choice) {
+                    if ($choice->choice_media) {
+                        Storage::disk('public')->delete($choice->choice_media);
+                    }
                 }
             }
 
@@ -322,8 +341,8 @@ class QuizController extends Controller
                 }
             }
 
-            // this assumes you have proper `onDelete('cascade')` on your foreign keys in the DB,
-            // or `->cascadeDeletes()` on Eloquent relationships if you prefer soft-deletes.
+            // -> cascade to source
+            // choice->question->notes->quiz
             $quiz->delete();
 
             session()->flash('success', 'Quiz deleted successfully!');
