@@ -32,6 +32,27 @@
                     <p class="mt-4">Loading quiz...</p>
                 </div>
 
+                <!-- Notes Card -->
+                <div id="notes-card" class="card-body text-center dark:bg-base-200 hidden space-y-4">
+                    <h2 id="notes-title" class="card-title text-2xl mb-2"></h2>
+                    <p id="notes-desc" class="text-base-content/70 mb-6"></p>
+
+                    <div id="note-display" class="flex justify-center">
+                        <!-- one note inserted here -->
+                    </div>
+
+                    <div class="text-sm text-base-content mt-2" id="note-counter">
+                        <!-- Note X of Y -->
+                    </div>
+
+                    <div class="flex justify-center gap-4 mt-4">
+                        <button id="prev-note-btn" class="btn btn-outline btn-sm">Previous</button>
+                        <button id="next-note-btn" class="btn btn-outline btn-sm">Next</button>
+                    </div>
+
+                    <button id="start-quiz-btn" class="btn btn-primary mt-6">Start Quiz</button>
+                </div>
+
                 <!-- Question Card -->
                 <div id="question-card" class="card-body hidden">
                     <div class="flex justify-between items-center mb-6">
@@ -107,6 +128,8 @@
     </div>
 
     <script>
+    let currentNoteIndex = 0;
+
     $(document).ready(function() {
         let quizData = null;
         let currentQuestionIndex = 0;
@@ -117,47 +140,9 @@
         loadQuiz();
 
         function loadQuiz() {
-            // Simulate API call - replace with actual endpoint
             const quizId = {{ $id }};
-            
-            // Mock data based on your JSON structure
-            // const mockData = {
-            //     "status": "success",
-            //     "data": {
-            //         "quiz_id": {{ $id }},
-            //         "lesson_id": 1,
-            //         "title": "{{ $quiz->title ?? 'Quiz Title' }}",
-            //         "description": "{{ $quiz->description ?? 'Quiz Description' }}",
-            //         "choices_type": "text",
-            //         "questions": [
-            //             {
-            //                 "question_id": 31,
-            //                 "question_text": "Sample Question: What is the correct answer?",
-            //                 "media_path": null,
-            //                 "choices": [
-            //                     {
-            //                         "choice_id": 265,
-            //                         "question_id": 31,
-            //                         "choice_text": "Choice A - Correct Answer",
-            //                         "choice_media": null,
-            //                         "is_correct": 1
-            //                     },
-            //                     {
-            //                         "choice_id": 266,
-            //                         "question_id": 31,
-            //                         "choice_text": "Choice B - Wrong Answer",
-            //                         "choice_media": null,
-            //                         "is_correct": 0
-            //                     }
-            //                 ]
-            //             }
-            //         ]
-            //     }
-            // };
-
             const token = document.querySelector('meta[name="api-token"]').content;
-            
-            // Make AJAX call with bearer token
+
             $.ajax({
                 url: `/api/questions/${quizId}`,
                 method: 'GET',
@@ -169,23 +154,55 @@
                 success: function(response) {
                     if (response.status === 'success') {
                         quizData = response.data;
-                        initializeQuiz();
+                        showNotes(); // show notes before starting
                     }
                 },
                 error: function(xhr) {
                     let message = 'Failed to load quiz data';
-                    if (xhr.responseJSON && xhr.responseJSON.message) {
-                        message = xhr.responseJSON.message;
-                    }
+                    if (xhr.responseJSON?.message) message = xhr.responseJSON.message;
                     showError(message);
                 }
             });
+        }
 
-            // Using mock data for demo
-            // setTimeout(() => {
-            //     quizData = mockData.data;
-            //     initializeQuiz();
-            // }, 1000);
+        function showNotes() {
+            $('#loading-state').hide();
+            $('#notes-card').show();
+
+            $('#notes-title').text(quizData.title);
+            $('#notes-desc').text(quizData.description);
+
+            currentNoteIndex = 0;
+
+            renderCurrentNote();
+            updateNoteNavButtons();
+        }
+
+        function renderCurrentNote() {
+            const note = quizData.notes[currentNoteIndex];
+
+            const noteHtml = `
+                <div class="card bg-base-100 shadow-md max-w-md">
+                    <figure class="px-4 pt-4">
+                        <img src="/storage/${note.note_media}" alt="Note Media" class="rounded-lg shadow">
+                    </figure>
+                    <div class="card-body">
+                        <p class="text-base-content">${note.note_text}</p>
+                    </div>
+                </div>
+            `;
+
+            $('#note-display').html(noteHtml);
+
+            // update note counter
+            $('#note-counter').text(
+                `Note ${currentNoteIndex + 1} of ${quizData.notes.length}`
+            );
+        }
+
+        function updateNoteNavButtons() {
+            $('#prev-note-btn').prop('disabled', currentNoteIndex === 0);
+            $('#next-note-btn').prop('disabled', currentNoteIndex === quizData.notes.length - 1);
         }
 
         function initializeQuiz() {
@@ -201,36 +218,62 @@
             updateProgress();
         }
 
+        $('#prev-note-btn').click(function () {
+            if (currentNoteIndex > 0) {
+                currentNoteIndex--;
+                renderCurrentNote();
+                updateNoteNavButtons();
+            }
+        });
+
+        $('#next-note-btn').click(function () {
+            if (currentNoteIndex < quizData.notes.length - 1) {
+                currentNoteIndex++;
+                renderCurrentNote();
+                updateNoteNavButtons();
+            }
+        });
+
+        $('#start-quiz-btn').click(function () {
+            $('#notes-card').hide();
+            initializeQuiz();
+        });
+
+
         function displayQuestion() {
             if (!quizData || !quizData.questions) return;
 
             const question = quizData.questions[currentQuestionIndex];
             const totalQuestions = quizData.questions.length;
 
-            // Update question info
             $('#current-question-number').text(currentQuestionIndex + 1);
             $('#question-counter').text(`${currentQuestionIndex + 1} of ${totalQuestions}`);
             $('#question-text').text(question.question_text);
 
-            // Handle question media
             if (question.media_path) {
-                $('#question-image').attr('src', question.media_path);
+                $('#question-image').attr('src', '/storage/'+question.media_path);
                 $('#question-media').show();
             } else {
                 $('#question-media').hide();
             }
 
-            // Clear and populate choices
             const choicesContainer = $('#choices-container');
             choicesContainer.empty();
 
-            question.choices.forEach((choice, index) => {
+            // Decide layout based on choices_type
+            const layoutClass =
+                quizData.choices_type === 'media'
+                    ? 'grid grid-cols-2 md:grid-cols-3 gap-4'
+                    : 'flex flex-col space-y-3';
+
+            choicesContainer.attr('class', layoutClass);
+
+            question.choices.forEach(choice => {
                 const isSelected = userAnswers[question.question_id] === choice.choice_id;
                 const isCorrect = choice.is_correct == 1;
-                
-                let choiceClass = 'input-bordered';
-                let labelClass = 'cursor-pointer label p-4 rounded-lg border transition-all hover:bg-base-200';
-                
+
+                let labelClass =
+                    'cursor-pointer label p-4 rounded-lg border transition-all hover:bg-base-200';
                 if (isReviewMode) {
                     if (isCorrect) {
                         labelClass += ' border-success bg-success/10';
@@ -241,25 +284,35 @@
                     labelClass += ' border-primary bg-primary/10';
                 }
 
+                // build choice content
+                let choiceContent = '';
+                if (choice.choice_text) {
+                    choiceContent += `<span>${choice.choice_text}</span>`;
+                }
+                if (choice.choice_media) {
+                    choiceContent += `
+                        <img src="/storage/${choice.choice_media}" 
+                            alt="Choice media" 
+                            class="rounded-lg shadow-md mt-2 max-h-32 object-contain">`;
+                }
+
                 const choiceHtml = `
                     <label class="${labelClass}">
                         <input type="radio" 
-                               name="question_${question.question_id}" 
-                               value="${choice.choice_id}"
-                               class="radio radio-primary mr-3" 
-                               ${isSelected ? 'checked' : ''}
-                               ${isReviewMode ? 'disabled' : ''}>
+                            name="question_${question.question_id}" 
+                            value="${choice.choice_id}"
+                            class="radio radio-primary mr-3"
+                            ${isSelected ? 'checked' : ''}
+                            ${isReviewMode ? 'disabled' : ''}>
                         <span class="label-text flex-1 text-left">
-                            ${choice.choice_text}
+                            ${choiceContent}
                             ${isReviewMode && isCorrect ? '<span class="badge badge-success ml-2">Correct</span>' : ''}
                         </span>
                     </label>
                 `;
-                
                 choicesContainer.append(choiceHtml);
             });
 
-            // Update navigation buttons
             updateNavigationButtons();
         }
 
