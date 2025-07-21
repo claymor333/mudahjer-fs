@@ -89,6 +89,13 @@ class QuizController extends Controller
             'title'         => $quiz->title,
             'description'   => $quiz->description,
             'choices_type'  => $quiz->choices_type,
+            'notes'         => $quiz->notes->map(function ($note) {
+                return [
+                    'note_id'       => $note->id,
+                    'note_text'     => $note->note_text,
+                    'note_media'    => $note->media_path,
+                ];
+            }),
             'questions'     => $quiz->questions->map(function ($question) {
                 return [
                     'question_id'   => $question->id,
