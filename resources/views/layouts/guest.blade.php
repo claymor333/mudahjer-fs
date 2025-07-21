@@ -9,7 +9,7 @@
         <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
         <style>
             /* Copy all the styles from welcome.blade.php */
-            :root[data-theme="light"] {
+            :root[data-theme="emerald"] {
                 --primary: #23577a;
                 --secondary: #afd9e0;
                 --accent: #63c196;
@@ -30,7 +30,7 @@
                 --btn-primary-hover: #1a4159;
             }
 
-            :root[data-theme="dark"] {
+            :root[data-theme="dim"] {
                 --primary: #afd9e0;
                 --secondary: #23577a;
                 --accent: #7ed4a6;
