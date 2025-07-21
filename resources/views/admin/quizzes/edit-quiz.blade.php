@@ -519,7 +519,7 @@
                             Select a correct answer.
                         </p>
                         <div class="choices-container space-y-3" id="choices-${questionId}">
-                            ${renderChoices(choices, choicesType, questionId)}
+                            ${renderChoices(choices, choicesType, questionId, nextNumber - 1)}
                         </div>
 
                         <button type="button" class="btn btn-sm btn-outline btn-primary mt-3" onclick="addChoice('${questionId}')">
@@ -553,7 +553,9 @@
          * @param {string} questionId
          * @returns {string}
          */
-        function renderChoices(choices, choicesType, questionId) {
+        function renderChoices(choices, choicesType, questionId, questionIndex) {
+
+            console.log(choices, choicesType, questionId, questionIndex);
             if (!choices || !choices.length) {
                 choices = [
                     { id: null, choice_text: '', choice_media: '', is_correct: false },
@@ -571,7 +573,7 @@
                 return `
                 <div class="choice-item flex-col p-3 bg-base-100 rounded-lg" ${choice.id ? `data-choice-id="${choice.id}"` : ''}>
                     <div class="flex items-center gap-3">
-                        <input type="radio" name="questions[${index}][correct_choice]" class="radio radio-primary" value="${index}" ${isChecked}>
+                        <input type="radio" name="questions[${questionIndex}][correct_choice]" class="radio radio-primary" value="${index}" ${isChecked}>
                         ${renderChoiceInput(value, choicesType)}
                         <button type="button" class="btn btn-sm btn-circle btn-ghost opacity-50" onclick="removeChoice(this)">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -640,7 +642,7 @@
          * @param {string} newType
          */
         function updateQuestionsForChoicesType(newType) {
-            questions.forEach(questionId => {
+            questions.forEach((questionId, index) => {
                 const $questionCard = $(`#${questionId}`);
 
                 const $choicesContainer = $questionCard.find(`#choices-${questionId}`);
@@ -651,7 +653,7 @@
                     {id: null, choice_text: '', is_correct: false}
                 ];
 
-                const newChoicesHtml = renderChoices(defaultChoices, newType, questionId);
+                const newChoicesHtml = renderChoices(defaultChoices, newType, questionId, index);
                 $choicesContainer.html(newChoicesHtml);
             });
         }
@@ -906,9 +908,11 @@
 
                         if (choicesType === 'media') {
                             const fileInput = $choiceItem.find('input[type="file"]')[0];
-                            if (!fileInput || !fileInput.files[0]) {
+                            const hasExistingMedia = $choiceItem.find('.indicator .preview-badge:not(.hidden)').length > 0;
+
+                            if (!fileInput?.files[0] && !hasExistingMedia) {
                                 console.warn(`❌ Question ${index + 1} choice media missing`);
-                                $choiceValidatorInput.text('Please select a file.').removeClass('hidden');
+                                $choiceValidatorInput.text('Please select a file or keep the existing media.').removeClass('hidden');
                                 $(fileInput).addClass('input-error');
                                 hasEmptyChoice = true;
                             } else {
@@ -1075,7 +1079,7 @@
                 } else if (currentStep === 3 && currentQuestionIndex === 0) {
                     prevStep();
                 } else if (currentStep === 3) {
-                    prevNote();
+                    prevQuestion();
                 } 
             }
             if (e.ctrlKey && (e.key === 'e' || e.key === 'E')) {
@@ -1258,10 +1262,16 @@
             questions.forEach((qId, index) => {
                 const questionCard = $(`#${qId}`);
                 const newSequence = index + 1;
+
                 questionCard
                     .attr('data-sequence', newSequence)
                     .find('h3')
                     .text(`Question ${newSequence}`);
+
+                // Fix radio input names in choices
+                questionCard.find('.choice-item input[type="radio"]').each(function () {
+                    this.name = `questions[${index}][correct_choice]`;
+                });
             });
         }
 
