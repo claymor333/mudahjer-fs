@@ -76,6 +76,43 @@ class QuizController extends Controller
             ]
         ]);
     }
+    public function getQuestions($quiz_id)
+    {
+        $quiz = Quiz::with([
+            'questions.choices',
+            'notes'
+        ])->findOrFail($quiz_id);
+
+        $data = [
+            'quiz_id'       => $quiz->id,
+            'lesson_id'     => $quiz->lesson_id,
+            'title'         => $quiz->title,
+            'description'   => $quiz->description,
+            'choices_type'  => $quiz->choices_type,
+            'questions'     => $quiz->questions->map(function ($question) {
+                return [
+                    'question_id'   => $question->id,
+                    'question_text' => $question->question_text,
+                    'media_path'    => $question->media_path,
+                    'choices'       => $question->choices->map(function ($choice) {
+                        return [
+                            'choice_id'     => $choice->id,
+                            'question_id'   => $choice->question_id,
+                            'choice_text'   => $choice->choice_text,
+                            'choice_media'  => $choice->choice_media,
+                            'is_correct'    => $choice->is_correct,
+                        ];
+                    }),
+                ];
+            }),
+        ];
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $data,
+        ]);
+    }
+
     /**
      * Display a listing of the resource.
      */

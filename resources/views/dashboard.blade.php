@@ -103,10 +103,14 @@
                 </div>
             </div>
 
-            <!-- Dashboard Cards Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                
+            @php
+                $hasAdmin = auth()->user()->hasRole('admin');
+            @endphp
+
+            <div class="grid grid-cols-1 md:grid-cols-{{ $hasAdmin ? '3' : '2' }} gap-8">
+
                 <!-- Admin Card -->
+                @hasrole('admin')
                 <div class="card shadow-xl card-hover backdrop-blur-lg">
                     <div class="card-body items-center text-center">
                         <div class="avatar placeholder mb-4">
@@ -125,6 +129,7 @@
                         </div>
                     </div>
                 </div>
+                @endhasrole
 
                 <!-- Quiz/Learn Card -->
                 <div class="card shadow-xl card-hover backdrop-blur-lg">
