@@ -18,6 +18,10 @@ class Lesson extends Model
                 ->withTimestamps();
     }
 
+    public function quizzes()
+    {
+        return $this->hasMany(Quiz::class);
+    }
 }
 
 
