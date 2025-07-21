@@ -9,10 +9,15 @@ class Quiz extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['title', 'description'];
+    protected $fillable = ['title', 'description', 'choices_type', 'lesson_id'];
 
     public function questions()
     {
         return $this->hasMany(Question::class);
+    }
+
+    public function notes()
+    {
+        return $this->hasMany(Note::class)->orderBy('order');
     }
 }

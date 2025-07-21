@@ -17,6 +17,7 @@ return new class extends Migration
     {
           Schema::create('lessons', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('lesson_id')->constrained('lessons')->onDelete('cascade');
             $table->string('title');
             $table->text('description')->nullable();
             $table->timestamps();
@@ -29,6 +30,7 @@ return new class extends Migration
             $table->foreignId('lesson_id')->constrained('lessons')->onDelete('cascade');
             $table->string('title');
             $table->text('description')->nullable();
+            $table->enum('choices_type', ['text', 'media'])->default('text');
             $table->timestamps();
         });
     }

@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('choices', function (Blueprint $table) {
             $table->id();
             $table->foreignId('question_id')->constrained('questions')->onDelete('cascade');
-            $table->string('choice_text');
+            $table->string('choice_text')->nullable();
+            $table->string('choice_media')->nullable(); // for media choices
             $table->boolean('is_correct')->default(false);
             $table->timestamps();
         });
