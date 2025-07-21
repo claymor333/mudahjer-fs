@@ -8,7 +8,7 @@
             0%, 100% { transform: scale(1) rotate(-1deg); }
             50% { transform: scale(1.05) rotate(1deg); }
         }
-        
+/*         
         .card {
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -16,21 +16,21 @@
                 rgba(255, 255, 255, 0.2), 
                 rgba(255, 255, 255, 0.05)
             );
-        }
+        } */
         
         .card-hover {
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             transition: all 0.3s ease;
         }
 
-        .stats {
+        /* .stats {
             background: linear-gradient(145deg, 
                 rgba(255, 255, 255, 0.1), 
                 rgba(255, 255, 255, 0.05)
             );
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-        }
+        } */
     </style>
 
     <x-slot name="header">
@@ -50,7 +50,7 @@
         </div>
     </x-slot>
 
-    <div class="py-4 bg-gradient-to-br from-base-200 via-base-100 to-base-200 min-h-screen">
+    <div class="py-4 bg-base-100 min-h-screen">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
 
             <!-- Additional Stats Section -->
@@ -111,10 +111,10 @@
 
                 <!-- Admin Card -->
                 @hasrole('admin')
-                <div class="card shadow-xl card-hover backdrop-blur-lg">
+                <div class="card card-border border-base-300 bg-base-100 dark:bg-base-200 shadow-lg">
                     <div class="card-body items-center text-center">
                         <div class="avatar placeholder mb-4">
-                            <div class="bg-primary text-primary-content rounded-full w-16">
+                            <div class="bg-primary text-primary-content rounded-full w-12">
                                 <span class="text-2xl">⚙️</span>
                             </div>
                         </div>
@@ -132,7 +132,7 @@
                 @endhasrole
 
                 <!-- Quiz/Learn Card -->
-                <div class="card shadow-xl card-hover backdrop-blur-lg">
+                <div class="card card-border border-base-300 bg-base-100 dark:bg-base-200 shadow-lg">
                     <div class="card-body">
                         <div class="flex items-center mb-4">
                             <div class="avatar placeholder mr-4">
@@ -149,13 +149,15 @@
                             Test your sign language knowledge with interactive quizzes and learn new signs through engaging lessons.
                         </p>
                         <div class="card-actions justify-end">
-                            <button class="btn btn-accent btn-sm">Explore Quizzes</button>
+                            <a href="{{ route('player.quizzes.index') }}" class="btn btn-accent btn-sm">
+                                Explore Quizzes
+                            </a>
                         </div>
                     </div>
                 </div>
 
                 <!-- Dictionary Card -->
-                <div class="card shadow-xl card-hover backdrop-blur-lg">
+                <div class="card card-border border-base-300 bg-base-100 dark:bg-base-200 shadow-lg">
                     <div class="card-body">
                         <div class="flex items-center mb-4">
                             <div class="avatar placeholder mr-4">
@@ -175,11 +177,11 @@
                             <div class="stats stats-horizontal shadow">
                                 <div class="stat p-2">
                                     <div class="stat-title text-xs">Total Signs</div>
-                                    <div class="stat-value text-sm">2,847</div>
+                                    <div class="stat-value text-sm">{{ $signs }}</div>
                                 </div>
                                 <div class="stat p-2">
                                     <div class="stat-title text-xs">Categories</div>
-                                    <div class="stat-value text-sm">24</div>
+                                    <div class="stat-value text-sm">{{ $categories }}</div>
                                 </div>
                             </div>
                         </div>
@@ -192,7 +194,7 @@
 
             <!-- Progress Section -->
             <div class="mt-8">
-                <div class="card bg-base-100 shadow-xl">
+                <div class="card card-border border-base-300 bg-base-100 dark:bg-base-200 shadow-lg">
                     <div class="card-body">
                         <h3 class="card-title mb-4">
                             <span class="text-2xl mr-2">📊</span>
