@@ -28,7 +28,7 @@
 
                 <!-- Right side: Back button when on step 2 -->
                 <div class="text-right">
-                    <div class="join hidden" id="step-control-join">
+                    <div class="join" id="step-control-join">
                         <button type="button" class="btn btn-outline btn-sm join-item" onclick="prevStep()">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
@@ -252,7 +252,6 @@
                 $('#quiz-details').addClass('hidden');
                 $('#notes-step').removeClass('hidden');
                 $('#step-title').text('Quiz Notes');
-                $('#step-control-join').removeClass('hidden');
 
                 if (notes.length === 0) {
                     addNote();
@@ -295,7 +294,6 @@
 
                 // Update title & hide back button
                 $('#step-title').text('Quiz Information');
-                $('#step-control-join').addClass('hidden');
 
                 currentStep = 1;
             } else if (currentStep === 3) {
@@ -309,7 +307,6 @@
 
                 // Update title & show back button
                 $('#step-title').text('Quiz Notes');
-                $('#step-control-join').removeClass('hidden');
 
                 currentStep = 2;
             }
