@@ -1,9 +1,6 @@
 <x-app-layout>
-
-    <div class="cursor-glow"></div>
-
     <style>
-        :root[data-theme="light"] {
+        :root[data-theme="emerald"] {
             --primary: #23577a;
             --secondary: #afd9e0;
             --accent: #63c196;
@@ -24,7 +21,7 @@
             --btn-primary-hover: #1a4159;
         }
 
-        :root[data-theme="dark"] {
+        :root[data-theme="dim"] {
             --primary: #afd9e0;
             --secondary: #23577a;
             --accent: #7ed4a6;
