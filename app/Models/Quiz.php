@@ -20,4 +20,9 @@ class Quiz extends Model
     {
         return $this->hasMany(Note::class)->orderBy('order');
     }
+
+    public function lesson()
+    {
+        return $this->belongsTo(Lesson::class);
+    }
 }

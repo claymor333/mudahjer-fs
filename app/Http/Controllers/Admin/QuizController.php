@@ -118,7 +118,7 @@ class QuizController extends Controller
         ]);
 
     } catch (\Exception $e) {
-        \Log::error('Quiz creation failed: ' . $e->getMessage());
+        Log::error('Quiz creation failed: ' . $e->getMessage());
 
         return response()->json([
             'success' => false,

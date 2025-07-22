@@ -9,20 +9,19 @@ Alpine.start();
 // Theme switcher functionality
 $(document).ready(function() {
     // Set initial theme based on localStorage or system preference
-    const theme = localStorage.getItem('theme') || 
-                 (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    const theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dim' : 'emerald');
     setTheme(theme);
 
     // Listen for changes on the theme controller checkbox
     $('.theme-controller').change(function() {
-        const newTheme = $(this).prop('checked') ? 'dark' : 'light';
+        const newTheme = $(this).prop('checked') ? 'dim' : 'emerald';
         setTheme(newTheme);
     });
 
     // Add mobile theme toggle support
     $('#theme-toggle-mobile').click(function() {
         const currentTheme = $('body').attr('data-theme');
-        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        const newTheme = currentTheme === 'dim' ? 'emerald' : 'dim';
         setTheme(newTheme);
     });
 
@@ -32,6 +31,6 @@ $(document).ready(function() {
         localStorage.setItem('theme', theme);
         
         // Update checkbox state
-        $('.theme-controller').prop('checked', theme === 'dark');
+        $('.theme-controller').prop('checked', theme === 'dim');
     }
 });
