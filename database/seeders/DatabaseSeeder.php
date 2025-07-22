@@ -25,12 +25,20 @@ class DatabaseSeeder extends Seeder
             'password' => bcrypt('password'),
         ]);
 
+        $userAdmin->player()->create([
+            'username' => 'admin_user',
+        ]);
+
         $userAdmin->assignRole('admin');
 
         $userBasic = User::create([
             'name' => 'Basic User',
             'email' => 'basic@email.com',
             'password' => bcrypt('password'),
+        ]);
+
+        $userBasic->player()->create([
+            'username' => 'basic_user',
         ]);
 
         $userBasic->assignRole('user');
