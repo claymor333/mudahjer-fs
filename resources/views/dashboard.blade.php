@@ -55,7 +55,7 @@
 
             <!-- Additional Stats Section -->
             <div class="mb-8">
-                <div class="stats stats-vertical lg:stats-horizontal shadow-lg w-full backdrop-blur-lg">
+                <div class="stats stats-vertical border border-base-300 dark:bg-base-200 lg:stats-horizontal shadow-lg w-full backdrop-blur-lg">
                     <div class="stat">
                         <div class="stat-figure text-secondary">
                             <div class="avatar online">
