@@ -39,7 +39,7 @@
                         <path d="m21 21-4.3-4.3"></path>
                     </g>
                 </svg>
-                <input type="search" class="grow" placeholder="Search" />
+                <input type="search" id="searchInput" class="grow" placeholder="Search signs..." />
                 <kbd class="kbd kbd-sm">CTRL</kbd>
                 <kbd class="kbd kbd-sm">K</kbd>
             </label>
@@ -115,6 +115,77 @@
                     const walk = (x - startX) * 2;
                     container.scrollLeft = scrollLeft - walk;
                 });
+            });
+
+        // Search functionality
+            const searchInput = document.getElementById('searchInput');
+            const quizCards = document.querySelectorAll('.card');
+            let searchTimeout;
+
+            // Focus search input with keyboard shortcut
+            document.addEventListener('keydown', function(e) {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                    e.preventDefault();
+                    searchInput.focus();
+                }
+            });
+
+            // Search implementation
+            searchInput.addEventListener('input', function(e) {
+                clearTimeout(searchTimeout);
+                
+                searchTimeout = setTimeout(() => {
+                    const searchTerm = e.target.value.toLowerCase().trim();
+                    let hasResults = false;
+
+                    // Get all lesson sections
+                    const lessonSections = document.querySelectorAll('.mb-8');
+                    
+                    lessonSections.forEach(section => {
+                        let sectionHasResults = false;
+                        const cards = section.querySelectorAll('.card');
+                        
+                        cards.forEach(card => {
+                            const title = card.querySelector('.card-title').textContent.toLowerCase();
+                            const description = card.querySelector('p').textContent.toLowerCase();
+                            const matches = title.includes(searchTerm) || description.includes(searchTerm);
+                            
+                            if (matches) {
+                                card.style.display = '';
+                                sectionHasResults = true;
+                                hasResults = true;
+                            } else {
+                                card.style.display = 'none';
+                            }
+                        });
+                        
+                        // Show/hide the entire section based on results
+                        section.style.display = sectionHasResults ? '' : 'none';
+                    });
+
+                    // Show no results message if needed
+                    const existingNoResults = document.getElementById('no-results-message');
+                    if (!hasResults && !existingNoResults && searchTerm !== '') {
+                        const noResults = document.createElement('div');
+                        noResults.id = 'no-results-message';
+                        noResults.className = 'text-center py-8';
+                        noResults.innerHTML = `
+                            <div class="flex flex-col items-center gap-4">
+                                <div class="text-base-content/70">
+                                    <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    </svg>
+                                </div>
+                                <h3 class="text-lg font-semibold">No signs found</h3>
+                                <p class="text-base-content/70">Try adjusting your search terms</p>
+                            </div>
+                        `;
+                        document.querySelector('.max-w-7xl').appendChild(noResults);
+                    } else if (hasResults && existingNoResults) {
+                        existingNoResults.remove();
+                    }
+                }, 300); // Debounce delay
             });
         });
     </script>
