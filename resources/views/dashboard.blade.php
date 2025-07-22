@@ -103,13 +103,9 @@
                 </div>
             </div>
 
-            @php
-                $hasAdmin = auth()->user()->hasrole('admin');
-            @endphp
-
-            <div class="grid grid-cols-{{ $hasAdmin ? '3' : '2' }} gap-6">
+            @hasrole('admin')
+            <div class="grid grid-cols-3 gap-6">
                 <!-- Admin Card -->
-                @hasrole('admin')
                 <div class="card card-border border-base-300 bg-base-100 dark:bg-base-200 shadow-lg">
                     <div class="card-body items-center text-center">
                         <div class="avatar placeholder mb-4">
@@ -128,6 +124,8 @@
                         </div>
                     </div>
                 </div>
+                @elsehasrole('user')
+            <div class="grid grid-cols-2 gap-6">
                 @endhasrole
 
                 <!-- Quiz/Learn Card -->
