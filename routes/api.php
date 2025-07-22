@@ -19,6 +19,12 @@ Route::post('/register', [AuthController::class, 'register']);
 /// email
 Route::post('/login', [AuthController::class, 'login']);
 
+/// {url}/api/logout - logs out user and revokes token
+/// params -----
+/// none
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+
+
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');

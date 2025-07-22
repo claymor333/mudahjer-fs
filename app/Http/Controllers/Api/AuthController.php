@@ -54,4 +54,15 @@ class AuthController
             'token' => $token,
         ]);
     }
+
+    // Logout user and revoke token.
+    public function logout(Request $request): JsonResponse
+    {
+        // Revoke the current access token
+        $request->user()->currentAccessToken()->delete();
+
+        return response()->json([
+            'message' => 'User logged out successfully'
+        ]);
+    }
 }
