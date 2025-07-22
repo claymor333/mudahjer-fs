@@ -26,6 +26,7 @@ class QuizController extends Controller
     public function show($id)
     {
         $quiz = Quiz::with([
+            'lesson',
             'questions' => function ($query) {
                 $query->orderBy('id', 'asc')
                     ->with(['choices' => function ($q) {
