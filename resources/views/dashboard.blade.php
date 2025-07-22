@@ -185,7 +185,7 @@
                             </div>
                         </div>
                         <div class="card-actions justify-end">
-                            <button class="btn btn-info btn-sm">Browse Dictionary</button>
+                            <a href="{{ route('player.notes.index') }}" class="btn btn-info btn-sm">Browse Dictionary</a>
                         </div>
                     </div>
                 </div>
