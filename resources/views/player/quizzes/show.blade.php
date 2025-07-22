@@ -3,7 +3,11 @@
         <div class="flex flex-col sm:flex-row gap-12">
             <!-- Left: title & description -->
             <div class="shrink-0 max-w-full sm:max-w-[50vw] space-y-1">
-                <!-- Title -->
+                <!-- Titles -->
+                <p class="text-base-content/70 truncate">
+                    {{ $quiz->lesson->title }}
+                </p>
+
                 <h2 class="font-semibold text-xl text-base-content mb-1 truncate">
                     {{ $quiz->title }}
                 </h2>
@@ -22,10 +26,27 @@
         </div>
     </x-slot>
 
-    <div class="py-12">
+    <style>
+        /* #question-card,
+        #notes-card {
+            max-height: 80vh;
+            overflow-y: auto;
+        } */
+
+        #question-card img,
+        #notes-card img {
+            max-height: 35vh; /* or whatever suits you */
+            width: auto;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
+
+    <div class="">
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
             <!-- Quiz Container -->
-            <div id="quiz-container" class="bg-base-100 shadow-xl rounded-lg">
+            <div id="quiz-container" class="border border-base-300 bg-base-100 dark:bg-base-200 shadow-xl rounded-lg">
                 <!-- Loading State -->
                 <div id="loading-state" class="card-body text-center">
                     <span class="loading loading-spinner loading-lg"></span>
@@ -33,9 +54,9 @@
                 </div>
 
                 <!-- Notes Card -->
-                <div id="notes-card" class="card-body text-center dark:bg-base-200 hidden space-y-4">
-                    <h2 id="notes-title" class="card-title text-2xl mb-2"></h2>
-                    <p id="notes-desc" class="text-base-content/70 mb-6"></p>
+                <div id="notes-card" class="card-body text-center hidden space-y-4">
+                    {{-- <h2 id="notes-title" class="card-title text-2xl mb-2"></h2> --}}
+                    {{-- <p id="notes-desc" class="text-base-content/70 mb-6"></p> --}}
 
                     <div id="note-display" class="flex justify-center">
                         <!-- one note inserted here -->
@@ -64,14 +85,19 @@
 
                     <!-- Question Content -->
                     <div class="mb-8">
-                        <div id="question-media" class="mb-4 hidden">
-                            <img id="question-image" class="max-w-full h-auto rounded-lg shadow-md" alt="Question media">
-                        </div>
-                        <h3 id="question-text" class="text-lg font-medium mb-6"></h3>
-                        
-                        <!-- Choices Container -->
-                        <div id="choices-container" class="space-y-3">
-                            <!-- Choices will be dynamically inserted here -->
+                        <div id="question-content" class="flex flex-col md:flex-row gap-12">
+                            <!-- Media -->
+                            <div id="question-media" class="hidden md:w-1/2 flex-shrink-0">
+                                <img id="question-image" class="w-full h-auto rounded-lg shadow-md object-contain" alt="Question media">
+                            </div>
+
+                            <!-- Text & Choices -->
+                            <div class="flex-1">
+                                <h3 id="question-text" class="text-lg font-medium mb-6"></h3>
+                                <div id="choices-container" class="space-y-3">
+                                    <!-- Choices go here -->
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -85,13 +111,22 @@
                         </button>
                         
                         <div class="flex gap-2">
+                            <button id="end-quiz-btn" class="btn btn-error">
+                                End Quiz
+                            </button>
                             <button id="next-btn" class="btn btn-primary" disabled>
                                 Next
                                 <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                                 </svg>
                             </button>
-                            <button id="submit-btn" class="btn btn-success hidden">
+                            <button id="show-results-btn" class="btn btn-success hidden">
+                                Show Results
+                                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </button>
+                            <button id="submit-btn" class="btn btn-success">
                                 Submit Quiz
                                 <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
@@ -120,6 +155,7 @@
                         <div class="card-actions justify-center">
                             <button id="restart-btn" class="btn btn-primary">Restart Quiz</button>
                             <button id="review-btn" class="btn btn-outline">Review Answers</button>
+                            <a href="{{ route('dashboard') }}" id="finish-btn" class="btn btn-success">Finish</a>
                         </div>
                     </div>
                 </div>
@@ -165,12 +201,43 @@
             });
         }
 
+        $(document).on('change', 'input[type="radio"]', function () {
+            if (isReviewMode) return;
+
+            const questionId = quizData.questions[currentQuestionIndex].question_id;
+            const choiceId = parseInt($(this).val());
+            userAnswers[questionId] = choiceId;
+
+            const question = quizData.questions[currentQuestionIndex];
+            const correctChoice = question.choices.find(c => c.is_correct == 1);
+
+            // Lock all choices
+            $(`input[name="question_${questionId}"]`).prop('disabled', true);
+
+            // Mark all choices
+            $(`input[name="question_${questionId}"]`).each(function () {
+                const $label = $(this).closest('label');
+                const thisChoiceId = parseInt($(this).val());
+
+                if (thisChoiceId === correctChoice.choice_id) {
+                    $label.addClass('border-success bg-success/10');
+                }
+
+                if (thisChoiceId === choiceId && thisChoiceId !== correctChoice.choice_id) {
+                    $label.addClass('border-error bg-error/10');
+                }
+            });
+
+            updateNavigationButtons();
+            updateProgress();
+        });
+
         function showNotes() {
             $('#loading-state').hide();
             $('#notes-card').show();
 
-            $('#notes-title').text(quizData.title);
-            $('#notes-desc').text(quizData.description);
+            // $('#notes-title').text(quizData.title);
+            // $('#notes-desc').text(quizData.description);
 
             currentNoteIndex = 0;
 
@@ -257,14 +324,23 @@
                 $('#question-media').hide();
             }
 
+            // choices display breakpoints, 2 choices = 1 column, 3-4 choices = 2 columns, 5+ choices = 3 columns
             const choicesContainer = $('#choices-container');
             choicesContainer.empty();
 
-            // Decide layout based on choices_type
-            const layoutClass =
-                quizData.choices_type === 'media'
-                    ? 'grid grid-cols-2 md:grid-cols-3 gap-4'
-                    : 'flex flex-col space-y-3';
+            // count choices
+            const choiceCount = question.choices.length;
+
+            // decide layout
+            let layoutClass = 'grid gap-4';
+
+            if (choiceCount <= 2) {
+                layoutClass += ' grid-cols-1';
+            } else if (choiceCount <= 4) {
+                layoutClass += ' grid-cols-2';
+            } else {
+                layoutClass += ' md:grid-cols-3 sm:grid-cols-2 grid-cols-1';
+            }
 
             choicesContainer.attr('class', layoutClass);
 
@@ -291,9 +367,9 @@
                 }
                 if (choice.choice_media) {
                     choiceContent += `
-                        <img src="/storage/${choice.choice_media}" 
+                        <img id="choice-media" src="/storage/${choice.choice_media}" 
                             alt="Choice media" 
-                            class="rounded-lg shadow-md mt-2 max-h-32 object-contain">`;
+                            class="rounded-lg shadow-md mt-2 object-contain">`;
                 }
 
                 const choiceHtml = `
@@ -323,13 +399,24 @@
             const hasAnswer = userAnswers[quizData.questions[currentQuestionIndex].question_id];
 
             $('#prev-btn').prop('disabled', isFirstQuestion);
-            
+
             if (isReviewMode) {
                 $('#next-btn').toggle(!isLastQuestion);
                 $('#submit-btn').hide();
+                $('#show-results-btn').removeClass('hidden');
             } else {
                 $('#next-btn').prop('disabled', !hasAnswer).toggle(!isLastQuestion);
-                $('#submit-btn').toggle(isLastQuestion && hasAnswer);
+
+                const totalQuestions = quizData.questions.length;
+                const answeredQuestions = Object.keys(userAnswers).length;
+
+                if (answeredQuestions === totalQuestions) {
+                    $('#submit-btn').show();
+                } else {
+                    $('#submit-btn').hide();
+                }
+
+                $('#show-results-btn').addClass('hidden');
             }
         }
 
@@ -387,6 +474,17 @@
             displayQuestion();
         });
 
+        $('#show-results-btn').click(function () {
+            $('#question-card').hide();
+            $('#results-card').show();
+        });
+
+        $('#end-quiz-btn').click(function () {
+            if (confirm('Are you sure you want to end the quiz? Your progress will not be saved.')) {
+                window.location.href = '{{ route("dashboard") }}';
+            }
+        });
+
         function submitQuiz() {
             // Calculate results
             let correctAnswers = 0;
@@ -412,22 +510,41 @@
             $('#final-score').text(`${correctAnswers}/${totalQuestions}`);
             $('#score-desc').text(`${percentage}% correct`);
 
-            // Here you would typically send results to server
-            /*
+            const lessonId = quizData.lesson_id;    // assuming you include lesson_id in `quizData`
+            const quizId = quizData.quiz_id;
+            const token = document.querySelector('meta[name="api-token"]').content;
+
+            console.log('Submitting results:', {
+                lessonId,
+                quizId,
+                userAnswers,
+                correctAnswers,
+                totalQuestions
+            });
+
             $.ajax({
-                url: '/api/quiz-results',
+                url: `/api/lessons/${lessonId}/questions/${quizId}/submit`,
                 method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': token
+                },
                 data: {
-                    quiz_id: quizData.quiz_id,
+                    lesson_id: lessonId,
+                    quiz_id: quizId,
                     answers: userAnswers,
                     score: correctAnswers,
-                    total: totalQuestions
+                    total: totalQuestions,
+                    is_completed: 1
                 },
                 success: function(response) {
-                    console.log('Results saved');
+                    console.log('Results saved', response);
+                },
+                error: function(xhr) {
+                    console.error('Failed to save results', xhr.responseJSON);
                 }
             });
-            */
         }
 
         function showError(message) {
