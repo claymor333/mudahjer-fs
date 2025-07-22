@@ -104,11 +104,10 @@
             </div>
 
             @php
-                $hasAdmin = auth()->user()->hasRole('admin');
+                $hasAdmin = auth()->user()->hasrole('admin');
             @endphp
 
-            <div class="grid grid-cols-1 md:grid-cols-{{ $hasAdmin ? '3' : '2' }} gap-8">
-
+            <div class="grid grid-cols-{{ $hasAdmin ? '3' : '2' }} gap-6">
                 <!-- Admin Card -->
                 @hasrole('admin')
                 <div class="card card-border border-base-300 bg-base-100 dark:bg-base-200 shadow-lg">
