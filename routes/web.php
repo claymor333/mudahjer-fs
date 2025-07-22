@@ -19,6 +19,9 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/player/quizzes', [PlayerQuizController::class, 'index'])->name('player.quizzes.index');
     Route::get('/player/quiz/play/{id}', [PlayerQuizController::class, 'show'])->name('player.quizzes.play');
+
+    Route::get('/player/notes', [PlayerQuizController::class, 'indexNote'])->name('player.notes.index');
+    Route::get('/player/note/show/{id}', [PlayerQuizController::class, 'showNote'])->name('player.notes.show');
 });
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {

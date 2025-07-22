@@ -43,7 +43,37 @@ class QuizController extends Controller
 
     public function takeQuiz($id)
     {
-        // Logic to handle taking a quiz
-        return view('player.quizzes.take', compact('id'));
+        // API CALL  -  \API\QuizController::submitQuiz()
+    }
+
+    public function indexNote()
+    {
+        // fetch all lessons with their related quiz
+        $lessons = Lesson::with('quizzes')->get();
+
+        // log the data as an array, not the Eloquent collection directly
+        Log::info('Fetching lessons for quizzes', [
+            'lessons' => $lessons->toArray()
+        ]);
+
+        return view('player.notes.index', compact('lessons'));
+    }
+
+    public function showNote($id)
+    {
+        $quiz = Quiz::with([
+            'lesson',
+            'questions' => function ($query) {
+                $query->orderBy('id', 'asc')
+                    ->with(['choices' => function ($q) {
+                        $q->orderBy('id', 'asc');
+                    }]);
+            },
+            'notes' => function ($query) {
+                $query->orderBy('id', 'asc');
+            }
+        ])->findOrFail($id);
+
+        return view('player.notes.show', compact('quiz', 'id'));
     }
 }
