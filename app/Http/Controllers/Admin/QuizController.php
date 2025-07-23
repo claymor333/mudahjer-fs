@@ -65,11 +65,8 @@ class QuizController extends Controller
                 'redirect' => route('admin.dashboard', ['message' => 'Quiz created successfully!'])
             ]);
 
-            return redirect()->route('admin.dashboard');
-        } catch (\Exception $e) {
-            Log::error('Quiz creation failed: ' . $e->getMessage());
-
-            session()->flash('error', 'Failed to create quiz. Please try again.');
+    } catch (\Exception $e) {
+        Log::error('Quiz creation failed: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,

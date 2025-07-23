@@ -4,7 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Lesson;
+use App\Models\LessonPlayerQuiz;
 use App\Models\Player;
+use App\Models\PlayerLessonProgress;
+use App\Models\PlayerStreak;
 use App\Models\Quiz;
 use Illuminate\Http\Request;
 
@@ -89,6 +92,13 @@ class QuizController extends Controller
             'title'         => $quiz->title,
             'description'   => $quiz->description,
             'choices_type'  => $quiz->choices_type,
+            'notes'         => $quiz->notes->map(function ($note) {
+                return [
+                    'note_id'       => $note->id,
+                    'note_text'     => $note->note_text,
+                    'note_media'    => $note->media_path,
+                ];
+            }),
             'questions'     => $quiz->questions->map(function ($question) {
                 return [
                     'question_id'   => $question->id,
@@ -111,6 +121,51 @@ class QuizController extends Controller
             'status' => 'success',
             'data'   => $data,
         ]);
+    }
+
+    public function submitQuiz(Request $request)
+    {
+        $player = Player::where('user_id', $request->user()->id)->first();
+
+        $validated = $request->validate([
+            'lesson_id' => 'required|exists:lessons,id',
+            'quiz_id' => 'required|exists:quizzes,id',
+            'answers' => 'required|array', // question_id => choice_id
+            'is_completed' => 'boolean',
+        ]);
+
+        // Save lesson–quiz submission
+        LessonPlayerQuiz::create([
+            'player_id' => $player->id,
+            'lesson_id' => $validated['lesson_id'],
+            'quiz_id' => $validated['quiz_id'],
+            'is_completed' => $validated['is_completed'] ?? false,
+            'answers_json' => $validated['answers'],
+        ]);
+
+        // Optionally mark lesson as completed
+        if (!empty($validated['is_completed'])) {
+            PlayerLessonProgress::updateOrCreate(
+                [
+                    'player_id' => $player->id,
+                    'lesson_id' => $validated['lesson_id'],
+                ],
+                [
+                    'is_completed' => true,
+                    'completed_at' => now(),
+                ]
+            );
+        }
+
+        // Log streak
+        PlayerStreak::create([
+            'player_id' => $player->id,
+            'lesson_id' => $validated['lesson_id'],
+            'quiz_id' => $validated['quiz_id'],
+            'submitted_at' => now(),
+        ]);
+
+        return response()->json(['status' => 'success']);
     }
 
     /**

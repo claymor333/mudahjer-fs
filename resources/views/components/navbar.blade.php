@@ -21,10 +21,10 @@
 	</div>
 	<div class="navbar-center hidden lg:flex">
 		<ul class="menu menu-horizontal px-1 gap-2">
-			<li><a class="hover:text-[var(--accent)] transition-colors">Learn</a></li>
-			<li><a class="hover:text-[var(--accent)] transition-colors">Practice</a></li>
-			<li><a class="hover:text-[var(--accent)] transition-colors">Dictionary</a></li>
-			<li><a class="hover:text-[var(--accent)] transition-colors">Community</a></li>
+			<li><a href="{{ route('player.quizzes.index') }}" class="hover:text-[var(--accent)] transition-colors">Learn</a></li>
+			{{-- <li><a class="hover:text-[var(--accent)] transition-colors">Practice</a></li> --}}
+			<li><a href="{{ route('player.notes.index') }}" class="hover:text-[var(--accent)] transition-colors">Dictionary</a></li>
+			{{-- <li><a class="hover:text-[var(--accent)] transition-colors">Community</a></li> --}}
 		</ul>
 	</div>
 	<div class="navbar-end gap-2">
