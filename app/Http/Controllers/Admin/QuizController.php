@@ -35,97 +35,97 @@ class QuizController extends Controller
     }
 
     public function storeQuiz(Request $request)
-{
-    $validated = $request->validate([
-        'title' => 'required|string|max:255',
-        'description' => 'required|string',
-        'choices_type' => 'required|in:text,media',
-        'lesson_id' => 'required',
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'choices_type' => 'required|in:text,media',
+            'lesson_id' => 'required',
 
-        'notes' => 'required|array|min:1',
-        'notes.*.note_text' => 'required|string',
-        'notes.*.media' => 'nullable|file|mimes:jpeg,png,jpg,webp,gif,mp4,webm|max:10240',
+            'notes' => 'required|array|min:1',
+            'notes.*.note_text' => 'required|string',
+            'notes.*.media' => 'nullable|file|mimes:jpeg,png,jpg,webp,gif,mp4,webm|max:10240',
 
-        'questions' => 'required|array|min:1',
-        'questions.*.question_text' => 'required|string',
-        'questions.*.correct_choice' => 'required|numeric',
-        'questions.*.media' => 'nullable|file|mimes:jpeg,png,jpg,webp,gif,mp4,webm|max:10240'
-    ]);
-
-    try {
-        $quiz = Quiz::create([
-            'title' => $validated['title'],
-            'description' => $validated['description'],
-            'choices_type' => $validated['choices_type'],
-            'lesson_id' => $validated['lesson_id']
+            'questions' => 'required|array|min:1',
+            'questions.*.question_text' => 'required|string',
+            'questions.*.correct_choice' => 'required|numeric',
+            'questions.*.media' => 'nullable|file|mimes:jpeg,png,jpg,webp,gif,mp4,webm|max:10240'
         ]);
 
-        // Notes
-        foreach ($validated['notes'] as $index => $noteData) {
-            $mediaPath = null;
-            if (isset($request->file('notes')[$index]['media'])) {
-                $mediaPath = $request->file('notes')[$index]['media']
-                    ->store('note-media', 'public');
-            }
-
-            $quiz->notes()->create([
-                'note_text' => $noteData['note_text'],
-                'media_path' => $mediaPath
-            ]);
-        }
-
-        // Questions
-        foreach ($validated['questions'] as $qIndex => $questionData) {
-            $mediaPath = null;
-            if (isset($request->file('questions')[$qIndex]['media'])) {
-                $mediaPath = $request->file('questions')[$qIndex]['media']
-                    ->store('question-media', 'public');
-            }
-
-            $question = $quiz->questions()->create([
-                'question_text' => $questionData['question_text'],
-                'media_path' => $mediaPath
+        try {
+            $quiz = Quiz::create([
+                'title' => $validated['title'],
+                'description' => $validated['description'],
+                'choices_type' => $validated['choices_type'],
+                'lesson_id' => $validated['lesson_id']
             ]);
 
-            // Choices
-            $choices = $request->input("questions.{$qIndex}.choices", []);
-            $correctIndex = $questionData['correct_choice'];
-
-            foreach ($choices as $cIndex => $choice) {
-                $choiceText = $choice['choice_text'] ?? null;
-                $choiceMediaPath = null;
-
-                if ($validated['choices_type'] === 'media') {
-                    if (isset($request->file("questions")[$qIndex]['choices'][$cIndex]['choice_media'])) {
-                        $choiceMediaPath = $request->file("questions")[$qIndex]['choices'][$cIndex]['choice_media']
-                            ->store('choice-media', 'public');
-                    }
+            // Notes
+            foreach ($validated['notes'] as $index => $noteData) {
+                $mediaPath = null;
+                if (isset($request->file('notes')[$index]['media'])) {
+                    $mediaPath = $request->file('notes')[$index]['media']
+                        ->store('note-media', 'public');
                 }
 
-                $question->choices()->create([
-                    'choice_text' => $validated['choices_type'] === 'text' ? $choiceText : null,
-                    'choice_media' => $validated['choices_type'] === 'media' ? $choiceMediaPath : null,
-                    'is_correct' => $cIndex == $correctIndex
+                $quiz->notes()->create([
+                    'note_text' => $noteData['note_text'],
+                    'media_path' => $mediaPath
                 ]);
             }
+
+            // Questions
+            foreach ($validated['questions'] as $qIndex => $questionData) {
+                $mediaPath = null;
+                if (isset($request->file('questions')[$qIndex]['media'])) {
+                    $mediaPath = $request->file('questions')[$qIndex]['media']
+                        ->store('question-media', 'public');
+                }
+
+                $question = $quiz->questions()->create([
+                    'question_text' => $questionData['question_text'],
+                    'media_path' => $mediaPath
+                ]);
+
+                // Choices
+                $choices = $request->input("questions.{$qIndex}.choices", []);
+                $correctIndex = $questionData['correct_choice'];
+
+                foreach ($choices as $cIndex => $choice) {
+                    $choiceText = $choice['choice_text'] ?? null;
+                    $choiceMediaPath = null;
+
+                    if ($validated['choices_type'] === 'media') {
+                        if (isset($request->file("questions")[$qIndex]['choices'][$cIndex]['choice_media'])) {
+                            $choiceMediaPath = $request->file("questions")[$qIndex]['choices'][$cIndex]['choice_media']
+                                ->store('choice-media', 'public');
+                        }
+                    }
+
+                    $question->choices()->create([
+                        'choice_text' => $validated['choices_type'] === 'text' ? $choiceText : null,
+                        'choice_media' => $validated['choices_type'] === 'media' ? $choiceMediaPath : null,
+                        'is_correct' => $cIndex == $correctIndex
+                    ]);
+                }
+            }
+
+            session()->flash('success', 'Quiz created successfully!');
+
+            return response()->json([
+                'success' => true,
+                'redirect' => route('admin.dashboard', ['message' => 'Quiz created successfully!'])
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Quiz creation failed: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create quiz. Please try again.'
+            ], 500);
         }
-
-        session()->flash('success', 'Quiz created successfully!');
-
-        return response()->json([
-            'success' => true,
-            'redirect' => route('admin.dashboard', ['message' => 'Quiz created successfully!'])
-        ]);
-
-    } catch (\Exception $e) {
-        Log::error('Quiz creation failed: ' . $e->getMessage());
-
-        return response()->json([
-            'success' => false,
-            'message' => 'Failed to create quiz. Please try again.'
-        ], 500);
     }
-}
 
 
     public function editQuiz($quiz_id)
