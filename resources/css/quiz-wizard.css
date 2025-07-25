@@ -124,6 +124,69 @@
     transform: translateY(-10%) scale(1.1);
 }
 
+/* Modified Carousel Animation */
+.notes-carousel {
+    position: relative;
+    min-height: 70vh;
+    height: auto;
+    perspective: 2000px;
+    transform-style: preserve-3d;
+    margin-bottom: 100px; /* Space for FABs */
+    overscroll-behavior: none;
+    padding-bottom: 100px;
+}
+
+.note-card {
+    position: absolute;
+    width: 100%;
+    height: fit-content;
+    max-width: 48rem; /* 1024px */
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    transition: all 0.5s ease-in-out;
+    opacity: 0;
+    filter: blur(4px);
+    pointer-events: none;
+    padding-bottom: 2rem;
+}
+
+.note-card.prev-2 {
+    opacity: 0.3;
+    filter: blur(6px);
+    transform: translateX(calc(-50% - 100%)) translateZ(-200px) rotateY(25deg);
+}
+
+.note-card.prev-1 {
+    opacity: 0.5;
+    filter: blur(3px);
+    transform: translateX(calc(-50% - 50%)) translateZ(-100px) rotateY(15deg);
+}
+
+.note-card.active {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateX(-50%);
+    z-index: 10;
+    pointer-events: all;
+}
+
+.note-card.next-1 {
+    opacity: 0.5;
+    filter: blur(3px);
+    transform: translateX(calc(-50% + 50%)) translateZ(-100px) rotateY(-15deg);
+}
+
+.note-card.next-2 {
+    opacity: 0.3;
+    filter: blur(6px);
+    transform: translateX(calc(-50% + 100%)) translateZ(-200px) rotateY(-25deg);
+}
+
+.note-nav:hover {
+    transform: translateY(-10%) scale(1.1);
+}
+
 /* Choice Animation */
 .choice-item {
     transition: all 0.3s ease;
@@ -235,11 +298,30 @@
     .note-nav.next {
         right: auto;
     }
+
+	.note-nav {
+        position: static;
+        transform: none;
+        margin: 1rem 0;
+    }
+
+    .note-nav.prev {
+        left: auto;
+    }
+
+    .note-nav.next {
+        right: auto;
+    }
 }
 
 /* Dark mode compatibility */
 @media (prefers-color-scheme: dark) {
     .question-nav {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+    }
+
+	.note-nav {
         background: rgba(255, 255, 255, 0.1);
         backdrop-filter: blur(10px);
     }

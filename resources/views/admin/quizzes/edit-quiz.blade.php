@@ -16,7 +16,22 @@
                 <div class="text-left">
                     <h2 class="text-2xl font-bold" id="step-title">Quiz Information</h2>
                 </div>
+        <!-- Enhanced Stepper -->
+        <div class="mb-12">
+            <div class="grid grid-cols-[200px_1fr_200px] items-center gap-4">
+                <!-- Left side: Title when on step 2 -->
+                <div class="text-left">
+                    <h2 class="text-2xl font-bold" id="step-title">Quiz Information</h2>
+                </div>
 
+                <!-- Center: Stepper -->
+                <div class="flex justify-center">
+                    <ul class="steps w-full">
+                        <li class="step step-primary" id="step-1">Quiz Details</li>
+                        <li class="step" id="step-2">Quiz Notes</li>
+                        <li class="step" id="step-3">Questions</li>
+                    </ul>
+                </div>
                 <!-- Center: Stepper -->
                 <div class="flex justify-center">
                     <ul class="steps w-full">
@@ -45,7 +60,34 @@
                 </div>
             </div>
         </div>
+                        
+                        <button type="button" class="btn btn-outline btn-sm join-item" onclick="nextStep()">
+                            Next
+                            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l7-7 l-7 -7"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
+        <!-- Form Container -->
+        <form id="quizForm" class="space-y-6">
+            @csrf
+            @method('PUT')
+            <input type="hidden" id="quiz-id" value="{{ $quiz->id }}">
+            
+            <!-- Step 1: Quiz Details -->
+            <div id="quiz-details" class="card bg-base-200 shadow-lg">
+                <div class="card-body">
+                    <fieldset class="fieldset">
+                        <legend class="fieldset-legend">
+                            <span class="label-text font-medium text-lg">Quiz Title</span>
+                        </legend>
+                        <input type="text" id="quiz-title" class="w-full input input-bordered validator" 
+                            placeholder="Enter quiz title..." required value="{{ $quiz->title }}" />
+                        <p class="validator-hint hidden">Title is required.</p>
         <!-- Form Container -->
         <form id="quizForm" class="space-y-6">
             @csrf
@@ -69,7 +111,20 @@
                         <textarea id="quiz-description" class="w-full textarea textarea-bordered validator" 
                             rows="4" placeholder="Describe your quiz..." required>{{ $quiz->description }}</textarea>
                         <p class="validator-hint hidden">Description is required.</p>
+                        <legend class="fieldset-legend">
+                            <span class="label-text font-medium text-lg">Description</span>
+                        </legend>
+                        <textarea id="quiz-description" class="w-full textarea textarea-bordered validator" 
+                            rows="4" placeholder="Describe your quiz..." required>{{ $quiz->description }}</textarea>
+                        <p class="validator-hint hidden">Description is required.</p>
 
+                        <legend class="fieldset-legend">
+                            <span class="label-text font-medium text-lg">Choices Type</span>
+                        </legend>
+                        <select id="quiz-choices-type" class="w-full select select-bordered">
+                            <option value="text" {{ $quiz->choices_type == 'text' ? 'selected' : '' }}>Questions with Text Choices</option>
+                            <option value="media" {{ $quiz->choices_type == 'media' ? 'selected' : '' }}>Question with Media Choices</option>
+                        </select>
                         <legend class="fieldset-legend">
                             <span class="label-text font-medium text-lg">Choices Type</span>
                         </legend>
@@ -141,10 +196,77 @@
                             <span class="flex-row" id="nextKbdN">
                                 <kbd class="kbd kbd-sm">CTRL</kbd> + <kbd class="kbd kbd-sm">E</kbd>
                             </span>
+                        <legend class="fieldset-legend">
+                            <span class="label-text font-medium text-lg">Associated Lesson</span>
+                        </legend>
+                        <div class="join w-full">
+                            <select id="quiz-lesson" class="select select-bordered join-item w-full" required>
+                                <option value="" disabled selected>Select a lesson</option>
+                                @foreach($lessons as $lesson)
+                                    <option value="{{ $lesson->id }}" {{ $lesson->id == $lesson->id ? 'selected' : '' }}>{{ $lesson->title }}</option>
+                                @endforeach
+                            </select>
+                            <button type="button" class="btn join-item" onclick="createNewLesson()">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <p class="validator-hint hidden">Please select a lesson</p>
+                    </fieldset>
+                </div>
+            </div>
+
+            <!-- Step 2: Notes -->
+            <div id="notes-step" class="hidden">
+                <!-- Note Counter -->
+                <div class="text-center mb-6">
+                    <div class="inline-flex items-center bg-base-200 rounded-full px-4 py-2">
+                        <span class="text-sm">Note </span>
+                        <span id="current-note-num" class="font-bold text-primary mx-1">1</span>
+                        <span class="text-sm">of </span>
+                        <span id="total-notes" class="font-bold text-primary ml-1">1</span>
+                    </div>
+                </div>
+
+                <!-- Notes Container with Navigation -->
+                <div class="relative">
+                    <!-- Notes Carousel -->
+                    <div class="notes-carousel" id="notes-carousel">
+                    </div>
+                    
+                    <!-- Navigation Buttons - Fixed on sides -->
+                    <div class="fixed left-4 top-1/2 flex flex-col items-center gap-2">
+                        <button type="button" class="note-nav prev btn btn-circle btn-ghost hidden" onclick="prevNote()">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                            </svg>
+                        </button>
+                        <div class="kbd-inst-q">
+                            <span class="flex-row" id="prevKbdN">
+                                <kbd class="kbd kbd-sm">CTRL</kbd> + <kbd class="kbd kbd-sm">Q</kbd>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="fixed right-4 top-1/2 flex flex-col items-center gap-2">
+                        <button type="button" class="note-nav next btn btn-circle btn-ghost hidden" onclick="nextNote()">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </button>
+                        <div class="kbd-inst-q">
+                            <span class="flex-row" id="nextKbdN">
+                                <kbd class="kbd kbd-sm">CTRL</kbd> + <kbd class="kbd kbd-sm">E</kbd>
+                            </span>
                         </div>
                     </div>
                 </div>
 
+                @include('admin.quizzes.partials.wizard-fab')
+            </div>
+
+            <!-- Step 3: Questions -->
                 @include('admin.quizzes.partials.wizard-fab')
             </div>
 
@@ -174,6 +296,7 @@
                             </button>
                             <div class="kbd-inst-q">
                                 <span class="flex-row" id="prevKbdQ">
+                                <span class="flex-row" id="prevKbdQ">
                                     <kbd class="kbd kbd-sm">CTRL</kbd> + <kbd class="kbd kbd-sm">Q</kbd>
                                 </span>
                             </div>
@@ -186,6 +309,7 @@
                                 </svg>
                             </button>
                             <div class="kbd-inst-q">
+                                <span class="flex-row" id="nextKbdQ">
                                 <span class="flex-row" id="nextKbdQ">
                                     <kbd class="kbd kbd-sm">CTRL</kbd> + <kbd class="kbd kbd-sm">E</kbd>
                                 </span>
@@ -218,8 +342,11 @@
         let questionCount = 0;
         let currentQuestionIndex = 0;
         let currentNoteIndex = 0;
+        let currentNoteIndex = 0;
         let questions = [];
         let deletedQuestions = [];
+        let notes = [];
+        let deletedNotes = [];
         let notes = [];
         let deletedNotes = [];
         let currentTheme = document.documentElement.getAttribute('data-theme');
@@ -230,6 +357,34 @@
             // Pre-fill the quiz details
             $('#quiz-title').val('{{ $quiz->title }}');
             $('#quiz-description').val('{{ $quiz->description }}');
+
+            // Initialize existing notes
+            $('.note-card').each(function() {
+                const id = $(this).attr('id');
+                notes.push(id);
+                
+                // Set media data attribute if note has media
+                if ($(this).find('.media-preview').length > 0) {
+                    $(this).attr('data-has-media', 'true');
+                }
+            });
+
+            updateNoteCounter();
+            updateNavigationButtons();
+            navigateToNote(0);
+
+            @foreach($quiz->notes as $note)
+                addNote(
+                    '{{ $note->id }}',
+                    '{{ addslashes($note->note_text) }}',
+                    '{{ $note->media_path }}');
+            @endforeach
+
+            if (notes.length > 0) {
+                navigateToNote(0);
+                updateNoteCounter();
+                updateNavigationButtons();
+            }
 
             // Initialize existing notes
             $('.note-card').each(function() {
@@ -292,6 +447,7 @@
 
         function nextStep() {
             // Step 1 validation (Quiz Details)
+            // Step 1 validation (Quiz Details)
             if (currentStep === 1) {
 
                 if (!validateStep(currentStep)) {
@@ -330,7 +486,13 @@
                 if (questions.length === 0) {
                     addQuestion();
                 }
+                if (questions.length === 0) {
+                    addQuestion();
+                }
 
+                return;
+            }
+        }
                 return;
             }
         }
@@ -340,7 +502,14 @@
                 // Move back to step 1
                 $('#step-2').removeClass('step-primary');
                 $('#step-1').addClass('step-primary');
+            if (currentStep === 2) {
+                // Move back to step 1
+                $('#step-2').removeClass('step-primary');
+                $('#step-1').addClass('step-primary');
 
+                // Show quiz details, hide notes
+                $('#notes-step').addClass('hidden');
+                $('#quiz-details').removeClass('hidden');
                 // Show quiz details, hide notes
                 $('#notes-step').addClass('hidden');
                 $('#quiz-details').removeClass('hidden');
@@ -411,8 +580,12 @@
             
             const noteHtml = `
                 <div class="note-card card bg-base-200 shadow-lg" id="${noteId}" data-sequence="${nextNumber}" ${existingId ? `data-existing-id="${existingId}"` : ''}>
+            const noteHtml = `
+                <div class="note-card card bg-base-200 shadow-lg" id="${noteId}" data-sequence="${nextNumber}" ${existingId ? `data-existing-id="${existingId}"` : ''}>
                     <div class="card-body">
                         <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-xl font-bold">Note ${nextNumber}</h3>
+                            <button type="button" class="btn btn-sm btn-circle btn-ghost" onclick="removeNote('${noteId}')">
                             <h3 class="text-xl font-bold">Note ${nextNumber}</h3>
                             <button type="button" class="btn btn-sm btn-circle btn-ghost" onclick="removeNote('${noteId}')">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -423,16 +596,25 @@
 
                         <input type="hidden" name="notes[${nextNumber-1}][id]" value="${existingId || ''}">
 
+                        <input type="hidden" name="notes[${nextNumber-1}][id]" value="${existingId || ''}">
+
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend">
                                 <span class="font-medium text-lg">Note Text</span>
+                                <span class="font-medium text-lg">Note Text</span>
                             </legend>
+                            <input type="text" id="note-text-${noteId}" name="notes[${nextNumber-1}][note_text]" class="w-full input input-bordered validator" placeholder="Enter your note..." value="${noteText}" required>
+                            <p id="note-text-val-${noteId}" class="text-error hidden">Note text is required.</p>
                             <input type="text" id="note-text-${noteId}" name="notes[${nextNumber-1}][note_text]" class="w-full input input-bordered validator" placeholder="Enter your note..." value="${noteText}" required>
                             <p id="note-text-val-${noteId}" class="text-error hidden">Note text is required.</p>
 
                             <legend class="fieldset-legend">
                                 <span class="font-medium text-lg">Media</span>
+                                <span class="font-medium text-lg">Media</span>
                             </legend>
+                            <input type="file" id="note-media-${noteId}" name="notes[${nextNumber-1}][media]" class="w-full file-input file-input-bordered validator" accept="image/*,video/*" onchange="previewMedia(this, '${noteId}')" required>
+                            <p id="note-media-val-${noteId}" class="text-error hidden">Media file is required.</p>
+                            <div class="media-preview mt-4" id="media-preview-${noteId}">
                             <input type="file" id="note-media-${noteId}" name="notes[${nextNumber-1}][media]" class="w-full file-input file-input-bordered validator" accept="image/*,video/*" onchange="previewMedia(this, '${noteId}')" required>
                             <p id="note-media-val-${noteId}" class="text-error hidden">Media file is required.</p>
                             <div class="media-preview mt-4" id="media-preview-${noteId}">
@@ -445,14 +627,76 @@
                                             </video>`
                                         }
                                         <button type="button" class="btn btn-sm btn-circle btn-error absolute top-2 right-2" onclick="removeMedia('${noteId}')">
+                                        <button type="button" class="btn btn-sm btn-circle btn-error absolute top-2 right-2" onclick="removeMedia('${noteId}')">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                             </svg>
                                         </button>
                                         <input type="hidden" name="notes[${nextNumber-1}][existing_media]" value="${mediaPath}">
+                                        <input type="hidden" name="notes[${nextNumber-1}][existing_media]" value="${mediaPath}">
                                     </div>
                                 ` : ''}
                             </div>
+                        </fieldset>
+                    </div>
+                </div>
+            `;
+
+            $('#notes-carousel').append(noteHtml);
+            notes.push(noteId);
+            
+            navigateToNote(notes.length - 1);
+            updateNoteCounter();
+            updateNavigationButtons();
+        }
+
+        function addQuestion(existingId = null, questionText = '', mediaPath = null, choices = []) {
+            const nextNumber = questions.length + 1;
+            const questionId = existingId || `question-${Date.now()}`;
+            const choicesType = $('#quiz-choices-type').val();
+
+            const questionHtml = `
+            <div class="question-card card bg-base-200 shadow-lg" id="${questionId}" data-sequence="${nextNumber}" ${existingId ? `data-existing-id="${existingId}"` : ''}>
+                <div class="card-body">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold">Question ${nextNumber}</h3>
+                        <button type="button" class="btn btn-sm btn-circle btn-ghost" onclick="removeQuestion('${questionId}')">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <fieldset class="fieldset">
+                        <legend class="fieldset-legend">Question Text</legend>
+                        <input type="text" id="question-text-${questionId}" class="w-full input input-bordered validator"
+                            placeholder="Enter question text..." value="${questionText || ''}" required>
+                        <p id="question-text-val-${questionId}" class="hidden text-error text-xs mt-1">Question text is required.</p>
+
+                        <legend class="fieldset-legend mt-4">Media (Optional)</legend>
+                        <input type="file" id="question-media-${questionId}" class="w-full file-input file-input-bordered"
+                            accept="image/*,video/*" onchange="previewMedia(this, '${questionId}')">
+                        <div class="media-preview mt-2" id="media-preview-${questionId}">
+                            ${mediaPath ? renderMediaPreview(mediaPath, questionId) : ''}
+                        </div>
+
+                        <legend class="fieldset-legend mt-4">Answer Choices</legend>
+                        <p id="choice-radio-val-${questionId}" class="text-error hidden text-xs mb-2">
+                            Select a correct answer.
+                        </p>
+                        <div class="choices-container space-y-3" id="choices-${questionId}">
+                            ${renderChoices(choices, choicesType, questionId, nextNumber - 1)}
+                        </div>
+
+                        <button type="button" class="btn btn-sm btn-outline btn-primary mt-3" onclick="addChoice('${questionId}')">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            Add Choice
+                        </button>
+                    </fieldset>
+                </div>
+            </div>
                         </fieldset>
                     </div>
                 </div>
@@ -518,11 +762,13 @@
             $('#questions-carousel').append(questionHtml);
             questions.push(questionId);
 
+
             if (!existingId) {
                 navigateToQuestion(questions.length - 1);
                 updateQuestionCounter();
                 updateNavigationButtons();
             }
+
 
             return questionId;
         }
@@ -974,6 +1220,160 @@
             return isValid;
         }
 
+        function validateStep(step) {
+            let isValid = true;
+            console.log(`🚀 Validating Step ${step}`);
+
+            if (step === 1) {
+                console.log('📋 Step 1: Quiz basic info');
+
+                const title = $('#quiz-title').val().trim();
+                if (!title) {
+                    console.warn('❌ Title is empty');
+                    $('#quiz-title').addClass('input-error');
+                    $('#quiz-title-val').removeClass('hidden');
+                    isValid = false;
+                } else {
+                    console.log('✅ Title OK');
+                    $('#quiz-title').removeClass('input-error');
+                    $('#quiz-title-val').addClass('hidden');
+                }
+
+                const description = $('#quiz-description').val().trim();
+                if (!description) {
+                    console.warn('❌ Description is empty');
+                    $('#quiz-description').addClass('input-error');
+                    $('#quiz-description-val').removeClass('hidden');
+                    isValid = false;
+                } else {
+                    console.log('✅ Description OK');
+                    $('#quiz-description').removeClass('input-error');
+                    $('#quiz-description-val').addClass('hidden');
+                }
+
+                const lessonVal = $('#quiz-lesson').val();
+                if (!lessonVal) {
+                    console.warn('❌ Lesson not selected');
+                    $('#quiz-lesson').addClass('input-error');
+                    $('#quiz-lesson-val').removeClass('hidden');
+                    isValid = false;
+                } else {
+                    console.log('✅ Lesson OK');
+                    $('#quiz-lesson').removeClass('input-error');
+                    $('#quiz-lesson-val').addClass('hidden');
+                }
+
+            } else if (step === 2) {
+                console.log('📋 Step 2: Notes');
+                notes.forEach((noteId) => {
+                    const noteText = $(`#note-text-${noteId}`).val().trim();
+                    const noteMediaInput = $(`#note-media-${noteId}`)[0].files[0];
+                    const hasMediaPreview = $(`#media-preview-${noteId}`).find('img, video').length > 0;
+
+                    if (!noteText) {
+                        console.warn(`❌ Note ${noteId} text is empty`);
+                        $(`#note-text-${noteId}`).addClass('input-error');
+                        $(`#note-text-val-${noteId}`).removeClass('hidden');
+                        isValid = false;
+                    } else {
+                        console.log(`✅ Note ${noteId} text OK`);
+                        $(`#note-text-${noteId}`).removeClass('input-error');
+                        $(`#note-text-val-${noteId}`).addClass('hidden');
+                    }
+
+                    if (!noteMediaInput && !hasMediaPreview) {
+                        console.warn(`❌ Note ${noteId} media missing`);
+                        $(`#note-media-${noteId}`).addClass('input-error');
+                        $(`#note-media-val-${noteId}`).removeClass('hidden');
+                        isValid = false;
+                    } else {
+                        console.log(`✅ Note ${noteId} media OK`);
+                        $(`#note-media-${noteId}`).removeClass('input-error');
+                        $(`#note-media-val-${noteId}`).addClass('hidden');
+                    }
+                });
+
+            } else if (step === 3) {
+                console.log('📋 Step 3: Questions');
+
+                questions.forEach((questionId, index) => {
+                    const questionText = $(`#question-text-${questionId}`).val().trim();
+                    const choicesType = $('#quiz-choices-type').val();
+                    const $questionRadioValidator = $(`#choice-radio-val-${questionId}`);
+
+                    let hasCorrectAnswer = $(`input[name="questions[${index}][correct_choice]"]:checked`).length > 0;
+                    let hasEmptyChoice = false;
+
+                    if (!questionText) {
+                        console.warn(`❌ Question ${index + 1} text is empty`);
+                        $(`#question-text-${questionId}`).addClass('input-error');
+                        $(`#question-text-val-${questionId}`).removeClass('hidden');
+                        isValid = false;
+                    } else {
+                        console.log(`✅ Question ${index + 1} text OK`);
+                        $(`#question-text-${questionId}`).removeClass('input-error');
+                        $(`#question-text-val-${questionId}`).addClass('hidden');
+                    }
+
+                    $(`#choices-${questionId} .choice-item`).each(function () {
+                        const $choiceItem = $(this);
+                        const $choiceValidatorInput = $choiceItem.find('.choice-validator-input');
+                        const $radioInput = $choiceItem.find('input[type="radio"]');
+
+                        if (choicesType === 'media') {
+                            const fileInput = $choiceItem.find('input[type="file"]')[0];
+                            const hasExistingMedia = $choiceItem.find('.indicator .preview-badge:not(.hidden)').length > 0;
+
+                            if (!fileInput?.files[0] && !hasExistingMedia) {
+                                console.warn(`❌ Question ${index + 1} choice media missing`);
+                                $choiceValidatorInput.text('Please select a file or keep the existing media.').removeClass('hidden');
+                                $(fileInput).addClass('input-error');
+                                hasEmptyChoice = true;
+                            } else {
+                                console.log(`✅ Question ${index + 1} choice media OK`);
+                                $choiceValidatorInput.addClass('hidden');
+                                $(fileInput).removeClass('input-error');
+                            }
+                        } else {
+                            const textInput = $choiceItem.find('input[type="text"]');
+                            if (!textInput.val().trim()) {
+                                console.warn(`❌ Question ${index + 1} choice text is empty`);
+                                textInput.addClass('input-error');
+                                $choiceValidatorInput.text('This choice cannot be empty.').removeClass('hidden');
+                                hasEmptyChoice = true;
+                            } else {
+                                console.log(`✅ Question ${index + 1} choice text OK`);
+                                textInput.removeClass('input-error');
+                                $choiceValidatorInput.addClass('hidden');
+                            }
+                        }
+
+                        if (!$radioInput.is(':checked')) {
+                            $radioInput.addClass('input-error').removeClass('radio-primary');
+                        } else {
+                            $radioInput.removeClass('input-error').addClass('radio-primary');
+                        }
+                    });
+
+                    if (!hasCorrectAnswer) {
+                        console.warn(`❌ Question ${index + 1} has no correct answer selected`);
+                        $questionRadioValidator.removeClass('hidden');
+                        isValid = false;
+                    } else {
+                        console.log(`✅ Question ${index + 1} correct answer OK`);
+                        $questionRadioValidator.addClass('hidden');
+                    }
+
+                    if (hasEmptyChoice) {
+                        isValid = false;
+                    }
+                });
+            }
+
+            console.log(`🎯 Step ${step} validation result: ${isValid ? '✅ Valid' : '❌ Invalid'}`);
+            return isValid;
+        }
+
 		function updateChoiceRemoveButtons(questionId) {
             const choicesContainer = $(`#choices-${questionId}`);
             const removeButtons = choicesContainer.find('button');
@@ -1063,6 +1463,46 @@
 			updateNavigationButtons();
 		}
 
+
+        function navigateToNote(index) {
+            if (index < 0 || index >= notes.length) return;
+            
+            currentNoteIndex = index;
+            
+            notes.forEach((noteId, i) => {
+                const noteCard = $(`#${noteId}`);
+                const diff = i - index;
+                
+                noteCard.removeClass('prev-2 prev-1 active next-1 next-2');
+                
+                if (diff === -2) noteCard.addClass('prev-2');
+                else if (diff === -1) noteCard.addClass('prev-1');
+                else if (diff === 0) noteCard.addClass('active');
+                else if (diff === 1) noteCard.addClass('next-1');
+                else if (diff === 2) noteCard.addClass('next-2');
+            });
+        }
+
+        function prevNote() {
+            if (currentNoteIndex > 0) {
+                navigateToNote(currentNoteIndex - 1);
+                updateNoteCounter();
+                updateNavigationButtons();
+            }
+        }
+
+        function nextNote() {
+			if (currentNoteIndex < notes.length - 1) {
+				// normal: go to next note
+				navigateToNote(currentNoteIndex + 1);
+			} else {
+				// already at the last note → create a new one
+				addNote();
+			}
+			updateNoteCounter();
+			updateNavigationButtons();
+		}
+
         function toggleKeyboardNavigation() {
             keyboardNavigationEnabled = !keyboardNavigationEnabled;
             const btn = $('#toggleKeyboardNav');
@@ -1087,13 +1527,19 @@
             if (e.ctrlKey && (e.key === 'q' || e.key === 'Q')) {
                 e.preventDefault();
                 if (currentStep === 2 && currentNoteIndex === 0) {
+                if (currentStep === 2 && currentNoteIndex === 0) {
                     prevStep();
                 } else if (currentStep === 2) {
                     prevNote();
                 } else if (currentStep === 3 && currentQuestionIndex === 0) {
                     prevStep();
                 } else if (currentStep === 3) {
+                    prevNote();
+                } else if (currentStep === 3 && currentQuestionIndex === 0) {
+                    prevStep();
+                } else if (currentStep === 3) {
                     prevQuestion();
+                } 
                 } 
             }
             if (e.ctrlKey && (e.key === 'e' || e.key === 'E')) {
@@ -1101,6 +1547,9 @@
                 if (currentStep === 1) {
                     nextStep();
                 } else if (currentStep === 2) {
+                    nextNote();
+                }
+                else if (currentStep === 3) {
                     nextNote();
                 }
                 else if (currentStep === 3) {
@@ -1116,6 +1565,11 @@
         function updateQuestionCounter() {
             $('#current-question-num').text(currentQuestionIndex + 1);
             $('#total-questions').text(questions.length);
+        }
+
+        function updateNoteCounter() {
+            $('#current-note-num').text(currentNoteIndex + 1);
+            $('#total-notes').text(notes.length);
         }
 
         function updateNoteCounter() {
@@ -1155,28 +1609,72 @@
 				// next is never disabled, because pressing it creates a new question if needed
 				nextNBtn.prop('disabled', false);
 			}
+			const prevNBtn = $('.note-nav.prev');
+			const nextNBtn = $('.note-nav.next');
+
+            const prevQBtn = $('.question-nav.prev');
+			const nextQBtn = $('.question-nav.next');
+
+			const prevKbdN = $('#prevKbdN');
+			const nextKbdN = $('#nextKbdN');
+
+            const prevKbdQ = $('#prevKbdQ');
+			const nextKbdQ = $('#nextKbdQ');
+
+            if (notes.length <= 1) {
+				prevNBtn.addClass('hidden');
+				nextNBtn.addClass('hidden');
+
+				prevKbdN.addClass('hidden');
+				nextKbdN.addClass('hidden');
+			} else {
+				prevNBtn.removeClass('hidden');
+				nextNBtn.removeClass('hidden');
+
+				prevKbdN.removeClass('hidden');
+				nextKbdN.removeClass('hidden');
+
+				// disable prev if at first question/note
+				prevNBtn.prop('disabled', currentNoteIndex === 0);
+
+				// next is never disabled, because pressing it creates a new question if needed
+				nextNBtn.prop('disabled', false);
+			}
 
 			if (questions.length <= 1) {
+                prevQBtn.addClass('hidden');
+				nextQBtn.addClass('hidden');
                 prevQBtn.addClass('hidden');
 				nextQBtn.addClass('hidden');
 
 				prevKbdQ.addClass('hidden');
 				nextKbdQ.addClass('hidden');
+				prevKbdQ.addClass('hidden');
+				nextKbdQ.addClass('hidden');
 			} else {
+                prevQBtn.removeClass('hidden');
+				nextQBtn.removeClass('hidden');
                 prevQBtn.removeClass('hidden');
 				nextQBtn.removeClass('hidden');
 
 				prevKbdQ.removeClass('hidden');
 				nextKbdQ.removeClass('hidden');
+				prevKbdQ.removeClass('hidden');
+				nextKbdQ.removeClass('hidden');
 
+				// disable prev if at first question/note
+				prevQBtn.prop('disabled', currentQuestionIndex === 0);
 				// disable prev if at first question/note
 				prevQBtn.prop('disabled', currentQuestionIndex === 0);
 
 				// next is never disabled, because pressing it creates a new question if needed
 				nextQBtn.prop('disabled', false);
+				nextQBtn.prop('disabled', false);
 			}
 		}
 
+		function previewMedia(input, elementId) {
+            const preview = $(`#media-preview-${elementId}`);
 		function previewMedia(input, elementId) {
             const preview = $(`#media-preview-${elementId}`);
             preview.empty();
@@ -1199,6 +1697,7 @@
                 }
                 
                 const removeBtn = $(`
+                    <button type="button" class="btn btn-sm btn-circle btn-error absolute top-2 right-2" onclick="removeMedia('${elementId}')">
                     <button type="button" class="btn btn-sm btn-circle btn-error absolute top-2 right-2" onclick="removeMedia('${elementId}')">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -1255,6 +1754,7 @@
         }
 
         function closePreviewModal() {
+        function closePreviewModal() {
             const modal = $('#preview-modal');
             modal.removeClass('active');
             
@@ -1285,10 +1785,16 @@
                 const questionCard = $(`#${qId}`);
                 const newSequence = index + 1;
 
+
                 questionCard
                     .attr('data-sequence', newSequence)
                     .find('h3')
                     .text(`Question ${newSequence}`);
+
+                // Fix radio input names in choices
+                questionCard.find('.choice-item input[type="radio"]').each(function () {
+                    this.name = `questions[${index}][correct_choice]`;
+                });
 
                 // Fix radio input names in choices
                 questionCard.find('.choice-item input[type="radio"]').each(function () {
@@ -1414,11 +1920,16 @@
             const lessonId = $('#quiz-lesson').val();
 
             console.log('Saving quiz with ID:', quizId);
+            console.log('Saving quiz with ID:', quizId);
 
+            if (!validateStep(currentStep)) {
+                console.log('Validating failed');
             if (!validateStep(currentStep)) {
                 console.log('Validating failed');
                 return;
             }
+
+            console.log('Validating passed');
 
             console.log('Validating passed');
 
@@ -1430,7 +1941,14 @@
             formData.append('lesson_id', lessonId);
             formData.append('deleted_questions', JSON.stringify(deletedQuestions));
             formData.append('deleted_notes', JSON.stringify(deletedNotes));
+            formData.append('deleted_notes', JSON.stringify(deletedNotes));
 
+            notes.forEach((noteId, index) => {
+                const noteCard = $(`#${noteId}`);
+                const existingId = noteCard.data('existing-id');
+                const noteText = noteCard.find('input[type="text"]').first().val().trim();
+
+                const mediaInput = noteCard.find('input[type="file"]')[0];
             notes.forEach((noteId, index) => {
                 const noteCard = $(`#${noteId}`);
                 const existingId = noteCard.data('existing-id');
@@ -1439,7 +1957,12 @@
                 const mediaInput = noteCard.find('input[type="file"]')[0];
                 const mediaFile = mediaInput?.files[0];
                 const removeMedia = noteCard.find('.media-preview').length === 0 && noteCard.attr('data-has-media');
+                const removeMedia = noteCard.find('.media-preview').length === 0 && noteCard.attr('data-has-media');
 
+                if (existingId) {
+                    formData.append(`notes[${index}][id]`, existingId);
+                }
+                formData.append(`notes[${index}][note_text]`, noteText);
                 if (existingId) {
                     formData.append(`notes[${index}][id]`, existingId);
                 }
@@ -1449,7 +1972,65 @@
                 if (mediaFile) {
                     formData.append(`notes[${index}][media]`, mediaFile);
                 }
+                // Handle media file
+                if (mediaFile) {
+                    formData.append(`notes[${index}][media]`, mediaFile);
+                }
 
+                // Handle media removal
+                if (noteCard.attr('data-remove-media') === 'true') {
+                    formData.append(`notes[${index}][remove_media]`, '1');
+                }
+            });
+
+            questions.forEach((questionId, index) => {
+                const questionCard = $(`#${questionId}`);
+                const existingId = questionCard.data('existing-id');
+                const questionText = questionCard.find('input[type="text"]').first().val().trim();
+                const correctAnswer = questionCard.find('input[type="radio"]:checked').val();
+
+                if (existingId) {
+                    formData.append(`questions[${index}][id]`, existingId);
+                }
+                formData.append(`questions[${index}][question_text]`, questionText);
+                formData.append(`questions[${index}][correct_choice]`, correctAnswer);
+
+                // handle question-level media
+                const mediaInput = questionCard.find(`input[type="file"]#question-media-${questionId}`)[0];
+                const mediaFile = mediaInput?.files?.[0] || null;
+
+                if (mediaFile) {
+                    formData.append(`questions[${index}][media]`, mediaFile);
+                }
+                if (questionCard.attr('data-remove-media') === 'true') {
+                    formData.append(`questions[${index}][remove_media]`, '1');
+                }
+
+                // handle choices
+                questionCard.find('.choice-item').each(function (choiceIdx) {
+                    const $choice = $(this);
+                    const choiceId = $choice.data('choice-id');
+
+                    if (choiceId) {
+                        formData.append(`questions[${index}][choices][${choiceIdx}][id]`, choiceId);
+                    }
+
+                    if (choicesType === 'text') {
+                        const choiceText = $choice.find('input[type="text"]').val().trim();
+                        formData.append(`questions[${index}][choices][${choiceIdx}][choice_text]`, choiceText);
+                    } else if (choicesType === 'media') {
+                        const fileInput = $choice.find('.choice-media-input')[0];
+                        const file = fileInput?.files?.[0];
+                        if (file) {
+                            formData.append(`questions[${index}][choices][${choiceIdx}][choice_media]`, file);
+                        }
+                        if ($choice.attr('data-remove-media') === 'true') {
+                            formData.append(`questions[${index}][choices][${choiceIdx}][remove_media]`, '1');
+                        }
+                    }
+                });
+            });
+			console.log('Form Data:', formData);
                 // Handle media removal
                 if (noteCard.attr('data-remove-media') === 'true') {
                     formData.append(`notes[${index}][remove_media]`, '1');
