@@ -63,12 +63,6 @@ class QuizController extends Controller
     {
         $quiz = Quiz::with([
             'lesson',
-            'questions' => function ($query) {
-                $query->orderBy('id', 'asc')
-                    ->with(['choices' => function ($q) {
-                        $q->orderBy('id', 'asc');
-                    }]);
-            },
             'notes' => function ($query) {
                 $query->orderBy('id', 'asc');
             }
