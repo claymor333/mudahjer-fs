@@ -26,9 +26,8 @@
                     </ul>
                 </div>
 
-                <!-- Right side: Back button when on step 2 -->
                 <div class="text-right">
-                    <div class="join hidden" id="step-control-join">
+                    <div class="join" id="step-control-join">
                         <button type="button" class="btn btn-outline btn-sm join-item" onclick="prevStep()">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
@@ -200,20 +199,6 @@
         </div>
     </div>
 
-    <!-- Media Preview Modal -->
-    <div class="preview-modal" id="mediaPreviewModal">
-        <div class="content">
-            <button class="btn btn-circle btn-error absolute top-2 right-2 close-btn" onclick="closeMediaPreview()">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
-            <img src="" id="previewImage" class="hidden" alt="Media Preview">
-            <video controls id="previewVideo" class="hidden" alt="Media Preview">
-                <source src="" id="previewVideoSource">
-            </video>
-        </div>
-    </div>
 
     <!-- Modal for full-size media preview -->
     <div class="preview-modal" id="preview-modal">
@@ -320,7 +305,6 @@
                 $('#quiz-details').addClass('hidden');
                 $('#notes-step').removeClass('hidden');
                 $('#step-title').text('Quiz Notes');
-                $('#step-control-join').removeClass('hidden');
 
                 if (notes.length === 0) {
                     addNote();
@@ -363,7 +347,6 @@
 
                 // Update title & hide back button
                 $('#step-title').text('Quiz Information');
-                $('#step-control-join').addClass('hidden');
 
                 currentStep = 1;
             } else if (currentStep === 3) {
@@ -377,7 +360,6 @@
 
                 // Update title & show back button
                 $('#step-title').text('Quiz Notes');
-                $('#step-control-join').removeClass('hidden');
 
                 currentStep = 2;
             }
@@ -457,7 +439,7 @@
                                 ${mediaPath ? `
                                     <div class="media-preview relative">
                                         ${mediaPath.match(/\.(jpg|jpeg|png|gif|webp)$/i) 
-                                            ? `<img src="/storage/${mediaPath}" class="w-full max-w-md h-48 object-cover rounded-lg mx-auto block" onclick="showPreviewModal(this)">` 
+                                            ? `<img src="/storage/${mediaPath}" data-media-src="/storage/${mediaPath}" data-media-type="image" class="w-full max-w-md h-48 object-cover rounded-lg mx-auto block" onclick="showPreviewModal(this)">` 
                                             : `<video controls class="w-full max-w-md h-48 object-cover rounded-lg mx-auto block" onclick="showPreviewModal(this)">
                                                 <source src="/storage/${mediaPath}" type="video/mp4">
                                             </video>`
@@ -596,15 +578,30 @@
             if (type === 'media') {
                 const hasMedia = value && value.trim() !== '';
                 const src = hasMedia ? `/storage/${value}` : '';
+                const isVideo = hasMedia && /\.(mp4|webm|ogg)$/i.test(value);
+                const isImage = hasMedia && /\.(jpg|jpeg|png|gif|bmp|svg)$/i.test(value);
 
                 return `
                 <div class="indicator w-full relative">
-                    <span class="indicator-item choice-image !p-0 badge badge-secondary preview-badge w-8 h-8 overflow-hidden ${hasMedia ? '' : 'hidden'}">
-                        <img src="${src}" alt="preview" class="w-full h-full object-cover cursor-pointer" onclick="showPreviewModal(this)"/>
+                    <!-- Image Badge -->
+                    <span class="indicator-item choice-media choice-preview-img !p-0 badge badge-secondary w-8 h-8 overflow-hidden ${isImage ? '' : 'hidden'}">
+                        <img src="${src}" data-media-src="${src}" data-media-type="image" alt="Image Preview" class="w-full h-full object-cover cursor-pointer" onclick="showPreviewModal(this)">
                     </span>
-                    <input type="file" class="file-input file-input-bordered flex-1 validator choice-media-input" accept="image/*,video/*" ${hasMedia ? '' : 'required'}>
-                    ${hasMedia ? `<input type="hidden" name="existing_choice_media" value="${value}">` : ''}
-                </div>`;
+
+                    <!-- Video Badge -->
+                    <span 
+                        class="indicator-item choice-media cursor-pointer choice-preview-video !p-0 badge badge-secondary w-8 h-8 flex items-center justify-center ${isVideo ? '' : 'hidden'}"
+                        data-media-type="video" 
+                        data-media-src="${src}" 
+                        onclick="showPreviewModal(this)">
+                        <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M4.5 3.5a1 1 0 011.6-.8l10 7a1 1 0 010 1.6l-10 7A1 1 0 014.5 17V3.5z" />
+                        </svg>
+                    </span>
+
+                        <input type="file" class="file-input file-input-bordered flex-1 validator choice-media-input" accept="image/*,video/*" ${hasMedia ? '' : 'required'}>
+                        ${hasMedia ? `<input type="hidden" name="existing_choice_media" value="${value}">` : ''}
+                    </div>`;
             }
 
             // text choice
@@ -624,7 +621,7 @@
             return `
             <div class="media-preview relative">
                 ${isImage
-                    ? `<img src="${src}" class="w-full max-w-md h-48 object-cover rounded-lg mx-auto block" onclick="showPreviewModal(this)">`
+                    ? `<img src="${src}" data-media-src="${src}" data-media-type="image" class="w-full max-w-md h-48 object-cover rounded-lg mx-auto block" onclick="showPreviewModal(this)">`
                     : `<video controls class="w-full max-w-md h-48 object-cover rounded-lg mx-auto block" onclick="showPreviewModal(this)">
                         <source src="${src}" type="video/mp4">
                     </video>`}
@@ -671,24 +668,42 @@
             this.dataset.previousValue = newType;
         });
 
-
         $(document).on('change', '.choice-media-input', function () {
             const fileInput = this;
             const file = fileInput.files[0];
             const $container = $(fileInput).closest('.indicator');
-            const $previewBadge = $container.find('.preview-badge');
-            const $img = $previewBadge.find('img');
+            const $imgBadge = $container.find('.choice-preview-img');
+            const $videoBadge = $container.find('.choice-preview-video');
+            const $img = $imgBadge.find('img');
+            const $svg = $videoBadge.find('svg');
+
+            // Reset both badges
+            $imgBadge.addClass('hidden');
+            $videoBadge.addClass('hidden');
+            $img.attr('src', '');
 
             if (file) {
                 const reader = new FileReader();
-                reader.onload = function (e) {
-                    $img.attr('src', e.target.result);
-                    $previewBadge.show();
-                };
-                reader.readAsDataURL(file);
-            } else {
-                $img.attr('src', '');
-                $previewBadge.hide();
+
+                if (file.type.startsWith('image/')) {
+                    reader.onload = function (e) {
+                        $img.attr('src', e.target.result);
+                        $img.off('click').on('click', () => showPreviewModal($img[0]));
+                        $imgBadge.removeClass('hidden');
+                    };
+                    reader.readAsDataURL(file);
+                } else if (file.type.startsWith('video/')) {
+                    reader.onload = function (e) {
+                        $svg.off('click').on('click', () => {
+                            const video = document.createElement('video');
+                            video.src = e.target.result;
+                            video.controls = true;
+                            showPreviewModal(video);
+                        });
+                        $videoBadge.removeClass('hidden');
+                    };
+                    reader.readAsDataURL(file);
+                }
             }
         });
 
@@ -698,7 +713,6 @@
             // optionally apply success color
             $lesson.css('--input-color', 'var(--color-success)');
         });
-
 
         function removeQuestion(questionId) {
             const questionIndex = questions.indexOf(questionId);
@@ -1197,35 +1211,43 @@
             }
         }
 
-		function showPreviewModal(element) {
+        function showPreviewModal(element) {
             const modal = $('#preview-modal');
             const content = $('#preview-content');
             content.empty();
 
-            if (element.tagName.toLowerCase() === 'video') {
-                // Clone video with all its sources
-                const video = $(element).clone();
-                video.removeClass('object-cover').addClass('object-contain');
-                video[0].currentTime = element.currentTime; // Sync video position
+            console.log(element)
+
+            // Try to get data attributes from element or parent
+            const mediaType = element.dataset.mediaType || element.closest('[data-media-type]')?.dataset.mediaType;
+            const mediaSrc = element.dataset.mediaSrc || element.closest('[data-media-src]')?.dataset.mediaSrc;
+
+            console.log('mediaSrc:', mediaSrc);
+            console.log('mediaType:', mediaType);
+
+            if (!mediaType || !mediaSrc) return;
+
+            if (mediaType === 'video') {
+                const video = $('<video controls autoplay class="w-full max-h-[80vh] object-contain">')
+                    .attr('src', mediaSrc);
                 content.append(video);
-            } else {
-                // Clone image
-                const img = $(element).clone();
-                img.removeClass('object-cover').addClass('object-contain');
+            } else if (mediaType === 'image') {
+                const img = $('<img class="w-full max-h-[80vh] object-contain">')
+                    .attr('src', mediaSrc);
                 content.append(img);
             }
 
             modal.addClass('active');
 
-            // Close on escape key
-            $(document).on('keydown.preview', function(e) {
+            // Close on Escape
+            $(document).off('keydown.preview').on('keydown.preview', function(e) {
                 if (e.key === 'Escape') {
                     closePreviewModal();
                 }
             });
 
-            // Close on click outside content
-            modal.on('click.preview', function(e) {
+            // Close on click outside
+            modal.off('click.preview').on('click.preview', function(e) {
                 if ($(e.target).closest('.content').length === 0) {
                     closePreviewModal();
                 }

@@ -134,11 +134,11 @@
 }
 
 /* Choice Animation */
-.choice-image {
+.choice-media {
     transition: all 0.3s ease;
 }
 
-.choice-image:hover {
+.choice-media:hover {
     transform: scale(1.5);
 }
 

@@ -237,6 +237,50 @@
             document.documentElement.setAttribute('data-theme', currentTheme);
         }
 
+        function handleChoiceMediaPreview(input) {
+            const $input = $(input);
+            const file = input.files[0];
+            if (!file) return;
+
+            const $imgBadge = $input.siblings('.choice-preview-img');
+            const $videoBadge = $input.siblings('.choice-preview-video');
+            const previewImg = $imgBadge.find('img')[0];
+            const videoIcon = $videoBadge.find('svg')[0];
+
+            // Reset both badges
+            $imgBadge.addClass('hidden');
+            $videoBadge.addClass('hidden');
+
+            const reader = new FileReader();
+
+            if (file.type.startsWith('image/')) {
+                reader.onload = function (e) {
+                    $(previewImg)
+                        .attr('src', e.target.result)
+                        .off('click')
+                        .on('click', function () {
+                            showPreviewModal(previewImg);
+                        });
+                    $imgBadge.removeClass('hidden');
+                };
+                reader.readAsDataURL(file);
+
+            } else if (file.type.startsWith('video/')) {
+                reader.onload = function (e) {
+                    $(videoIcon)
+                        .off('click')
+                        .on('click', function () {
+                            const video = document.createElement('video');
+                            video.src = e.target.result;
+                            video.controls = true;
+                            showPreviewModal(video);
+                        });
+                    $videoBadge.removeClass('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
         function nextStep() {
             // Step 1 validation (Quiz Details)
             if (currentStep === 1) {
@@ -400,14 +444,27 @@
 
             let choiceInputHtml;
             if (choicesType === 'media') {
-                choiceInputHtml = `
-                    <div class="indicator w-full relative">
-                        <span class="indicator-item choice-image !p-0 badge badge-secondary preview-badge w-8 h-8 overflow-hidden hidden">
-                            <img src="" alt="preview" class="w-full h-full object-cover cursor-pointer" onclick="showPreviewModal(this)"/>
-                        </span>
-                        <input type="file" id="choice-media-${questionId}" class="file-input file-input-bordered flex-1 validator choice-media-input" accept="image/*,video/*" required>
-                    </div>
-                `;
+                    choiceInputHtml = `
+                        <div class="indicator w-full relative">
+                            <!-- Image preview badge -->
+                            <span class="indicator-item choice-media choice-preview-img !p-0 badge badge-secondary w-8 h-8 overflow-hidden hidden">
+                                <img src="" alt="preview" class="w-full h-full object-cover cursor-pointer" onclick="showPreviewModal(this)">
+                            </span>
+
+                            <!-- Video icon badge -->
+                            <span class="indicator-item choice-media choice-preview-video !p-0 badge badge-secondary w-8 h-8 flex items-center justify-center hidden cursor-pointer">
+                                <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20" onclick="showPreviewModal(this)">
+                                    <path d="M4.5 3.5a1 1 0 011.6-.8l10 7a1 1 0 010 1.6l-10 7A1 1 0 014.5 17V3.5z" />
+                                </svg>
+                            </span>
+
+                            <input type="file" 
+                                class="file-input file-input-bordered flex-1 validator choice-media-input" 
+                                accept="image/*,video/*" 
+                                onchange="handleChoiceMediaPreview(this)" 
+                                required>
+                        </div>
+                    `;
             } else {
                 choiceInputHtml = `
                     <input type="text" class="input input-bordered flex-1 validator" placeholder="Choice text" required>
@@ -505,10 +562,23 @@
                 if (newType === 'media') {
                     choiceInputHtml = `
                         <div class="indicator w-full relative">
-                            <span class="indicator-item choice-image !p-0 badge badge-secondary preview-badge w-8 h-8 overflow-hidden hidden">
-                                <img src="" alt="preview" class="w-full h-full object-cover cursor-pointer" onclick="showPreviewModal(this)"/>
+                            <!-- Image preview badge -->
+                            <span class="indicator-item choice-media choice-preview-img !p-0 badge badge-secondary w-8 h-8 overflow-hidden hidden">
+                                <img src="" alt="preview" class="w-full h-full object-cover cursor-pointer" onclick="showPreviewModal(this)">
                             </span>
-                            <input type="file" class="file-input file-input-bordered flex-1 validator choice-media-input" accept="image/*,video/*" required>
+
+                            <!-- Video icon badge -->
+                            <span class="indicator-item choice-media choice-preview-video !p-0 badge badge-secondary w-8 h-8 flex items-center justify-center hidden cursor-pointer">
+                                <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20" onclick="showPreviewModal(this)">
+                                    <path d="M4.5 3.5a1 1 0 011.6-.8l10 7a1 1 0 010 1.6l-10 7A1 1 0 014.5 17V3.5z" />
+                                </svg>
+                            </span>
+
+                            <input type="file" 
+                                class="file-input file-input-bordered flex-1 validator choice-media-input" 
+                                accept="image/*,video/*" 
+                                onchange="handleChoiceMediaPreview(this)" 
+                                required>
                         </div>
                     `;
                 } else {
