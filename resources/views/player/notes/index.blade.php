@@ -40,19 +40,20 @@
                     <p class="mt-1 text-sm text-base-content/70">
                         Explore our collection of interactive sign language signs and notes
                     </p>
+                    <p class="mt-1 text-sm text-base-content/70 italic" id="builderPlaceholder">
+                        Want to build signs? <a class="link link-hover text-primary font-semibold" onclick="$('#typeFilter').val('notes').trigger('change')">Switch to Notes</a>
+                    </p>
                 </div>
                 <div class="join join-vertical sm:join-horizontal gap-2 w-full sm:w-auto">
                     <div class="join-item flex-1 sm:flex-none">
                         <select class="select select-bordered w-full" id="typeFilter">
-                            <option value="all">All Content</option>
-                            <option value="notes">Notes Only</option>
+                            {{-- <option value="all">All Content</option> --}}
                             <option value="quiz">Quizzes Only</option>
+                            <option value="notes">Notes Only</option>
                         </select>
                     </div>
                     <div class="join-item relative flex-1 sm:flex-none">
-                        <input type="search" id="searchInput" 
-                               class="input input-bordered w-full pr-20" 
-                               placeholder="Search signs..." />
+                        <input type="search" id="searchInput" class="input input-bordered w-full pr-20" placeholder="Search signs..." />
                         <div class="absolute top-0 right-0 join-item h-full flex items-center pr-2">
                             <kbd class="kbd kbd-sm">⌘</kbd>
                             <kbd class="kbd kbd-sm ml-1">K</kbd>
@@ -61,31 +62,37 @@
                 </div>
             </div>
 
-            <!-- Sign Builder Section -->
-            <div class="bg-base-200 p-4 rounded-lg">
-                <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                    <div class="flex-1 w-full">
-                        <label class="label">
-                            <span class="label-text font-semibold">Sign Builder</span>
-                            <span class="label-text-alt" id="signCount">0 signs</span>
-                        </label>
-                        <div class="flex gap-2 items-center">
-                            <div class="flex-1 min-h-[3rem] p-2 bg-base-100 border border-base-300 rounded-lg flex flex-wrap gap-2 items-center" id="signBuilderContainer">
-                                <span class="text-base-content/50 text-sm" id="builderPlaceholder">Add notes to build your sign sequence...</span>
-                            </div>
-                            <button class="btn btn-primary" id="buildButton" disabled>
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                Build
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </x-slot>
-
+    <div id="signBuilderWrapper" class="transition-all duration-500 ease-in-out overflow-hidden sticky top-[4rem] z-10 bg-base-100 border-b border-base-200 shadow max-h-[1000px] opacity-0">
+        <!-- Sign Builder Section -->
+        <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center py-2">
+            <div class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <fieldset class="fieldset">
+                    <legend class="fieldset-legend">
+                        <span class="label-text font-semibold">Sign Builder</span>
+                        <span class="label-text-alt" id="signCount">1 sign</span>
+                    </legend>
+                    <div class="flex gap-2 items-center">
+                        <div class="flex-1 min-h-[3rem] p-2 bg-base-100 input rounded-lg flex flex-wrap gap-2 items-center" id="signBuilderContainer"><div class="badge badge-primary gap-2 py-3 px-3">
+                        <span>2</span>
+                        <button class="btn btn-ghost btn-xs btn-circle remove-sign" data-index="0">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div></div>
+                        <button class="btn btn-primary" id="buildButton">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Build
+                        </button>
+                    </div>
+                </fieldset>
+            </div>
+        </div>
+    </div>
     <div class="py-6">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             @foreach($lessons as $lesson)
@@ -111,11 +118,7 @@
                             {{-- Display Quizzes --}}
                             @php $cardIndex = 0; @endphp
                             @forelse($lesson->quizzes as $quiz)
-                                <div class="card card-border border-base-300 bg-base-100 dark:bg-base-200 w-full shadow-lg quiz-card {{ $cardIndex >= 5 ? 'hidden-card' : '' }}" 
-                                     data-lesson-id="{{ $lesson->id }}" 
-                                     data-card-index="{{ $cardIndex }}"
-                                     data-type="quiz"
-                                     data-searchable="{{ strtolower($quiz->title . ' ' . $quiz->description) }}">
+                                <div class="card card-border border-base-300 bg-base-100 dark:bg-base-200 w-full shadow-lg quiz-card {{ $cardIndex >= 5 ? 'hidden-card' : '' }}" data-lesson-id="{{ $lesson->id }}" data-card-index="{{ $cardIndex }}"data-type="quiz" data-searchable="{{ strtolower($quiz->title . ' ' . $quiz->description) }}">
                                     <div class="card-body">
                                         <h2 class="card-title truncate">{{ $quiz->title }}</h2>
                                         <p class="mb-2 truncate">{{ $quiz->description }}</p>
@@ -135,21 +138,28 @@
 
                             {{-- Display Notes --}}
                             @forelse($lesson->notes as $note)
-                                <div class="card bg-base-100 w-full shadow-sm note-card {{ $cardIndex >= 5 ? 'hidden-card' : '' }}" 
-                                     data-lesson-id="{{ $lesson->id }}" 
-                                     data-card-index="{{ $cardIndex }}"
-                                     data-type="notes"
-                                     data-searchable="{{ strtolower($note->note_text) }}">
+                                <div class="card card-border border-base-300 bg-base-100 dark:bg-base-200 w-full shadow-lg note-card hidden-card" data-lesson-id="{{ $lesson->id }}" data-card-index="{{ $cardIndex }}" data-type="notes" data-searchable="{{ strtolower($note->note_text) }}">
                                     <figure>
                                         @if($note->media_path)
-                                            <img src="{{ asset('storage/' . $note->media_path) }}" 
-                                                 alt="{{ $note->note_text }}" 
-                                                 onerror="this.src='https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp'"/>
+                                            @php
+                                                $ext = pathinfo($note->media_path, PATHINFO_EXTENSION);
+                                                $isVideo = in_array(strtolower($ext), ['mp4', 'webm', 'ogg']);
+                                            @endphp
+
+                                            @if($isVideo)
+                                                <video controls class="w-full h-auto max-h-60 object-contain">
+                                                    <source src="{{ asset('storage/' . $note->media_path) }}" type="video/{{ $ext }}">
+                                                    Your browser does not support the video tag.
+                                                </video>
+                                            @else
+                                                <img src="{{ asset('storage/' . $note->media_path) }}" alt="{{ $note->note_text }}" class="w-full object-contain max-h-60"/>
+                                            @endif
                                         @else
-                                            <img src="https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp" 
-                                                 alt="Default image"/>
+                                            <img src="https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp" alt="Default image"/>
                                         @endif
                                     </figure>
+
+
                                     <div class="card-body">
                                         <h2 class="card-title">{{ $note->note_text }}</h2>
                                         <p>Sign language note from {{ $lesson->title }}</p>
@@ -165,13 +175,12 @@
                                                 </svg>
                                                 Preview
                                             </button>
-                                            <button class="btn btn-sm btn-primary add-to-builder-btn" 
+                                            <button class="btn btn-sm btn-circle btn-primary add-to-builder-btn" 
                                                     data-note-id="{{ $note->id }}"
                                                     data-note-text="{{ $note->note_text }}">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                                 </svg>
-                                                Add
                                             </button>
                                         </div>
                                     </div>
@@ -198,7 +207,7 @@
 
     {{-- Sign Builder Modal --}}
     <dialog id="sign_builder_modal" class="modal">
-        <div class="modal-box w-11/12 max-w-4xl">
+        <div class="modal-box w-11/12 max-w-4xl my-8">
             <form method="dialog">
                 <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
             </form>
@@ -228,14 +237,12 @@
                 </div>
                 
                 <!-- Sign Display -->
-                <div class="w-full max-w-md">
-                    <div class="card bg-base-100 shadow-lg">
-                        <figure class="h-64">
-                            <img id="currentSignImage" src="" alt="Current sign" class="w-full h-full object-cover">
-                        </figure>
-                        <div class="card-body text-center">
-                            <h2 class="card-title justify-center" id="currentSignTitle">No signs added</h2>
-                        </div>
+                <div class="w-full flex flex-col items-center gap-4">
+                    <div id="signMediaWrapper" class="relative w-full bg-base-200/50 rounded-lg overflow-hidden flex items-center justify-center">
+                        <img id="currentSignImage" ...>
+                    </div>
+                    <div class="text-center">
+                        <h2 class="text-xl font-semibold" id="currentSignTitle">No signs added</h2>
                     </div>
                 </div>
                 
@@ -252,7 +259,7 @@
 
     {{-- Preview Modal --}}
     <dialog id="preview_modal" class="modal">
-        <div class="modal-box w-11/12 max-w-2xl">
+        <div class="modal-box w-11/12 max-w-2xl my-8">
             <form method="dialog">
                 <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
             </form>
@@ -278,22 +285,22 @@
             let currentSignIndex = 0;
 
             function updateSignBuilder() {
+                const wrapper = $('#signBuilderWrapper');
                 const container = $('#signBuilderContainer');
-                const placeholder = $('#builderPlaceholder');
                 const buildButton = $('#buildButton');
                 const signCount = $('#signCount');
 
                 container.empty();
-                
+
                 if (signBuilderNotes.length === 0) {
-                    container.append(placeholder);
+                    wrapper.removeClass('max-h-[1000px] opacity-100').addClass('max-h-0 opacity-0');
                     buildButton.prop('disabled', true);
                     signCount.text('0 signs');
                 } else {
-                    placeholder.hide();
+                    wrapper.removeClass('max-h-0 opacity-0 hidden').addClass('max-h-[1000px] opacity-100');
                     buildButton.prop('disabled', false);
                     signCount.text(`${signBuilderNotes.length} sign${signBuilderNotes.length !== 1 ? 's' : ''}`);
-                    
+
                     signBuilderNotes.forEach((note, index) => {
                         const pill = $(`
                             <div class="badge badge-primary gap-2 py-3 px-3">
@@ -329,9 +336,33 @@
 
                 const currentNote = signBuilderNotes[currentSignIndex];
                 $('#currentSignIndex').text(currentSignIndex + 1);
-                $('#currentSignImage').attr('src', currentNote.mediaPath || 'https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp');
                 $('#currentSignTitle').text(currentNote.text);
-                
+                const ext = currentNote.mediaPath?.split('.').pop().toLowerCase();
+                const isVideo = ['mp4', 'webm', 'ogg'].includes(ext);
+
+                // Create a fresh wrapper to fully reset rendering context
+                const newMediaWrapper = $(`
+                    <div id="signMediaWrapper" class="relative w-full bg-base-200/50 rounded-lg overflow-hidden flex items-center justify-center"></div>
+                `);
+                $('#signMediaWrapper').replaceWith(newMediaWrapper);
+
+                if (isVideo) {
+                    const video = $(`
+                        <video controls class="w-auto max-w-full h-auto max-h-[70vh] object-contain">
+                            <source src="${currentNote.mediaPath}" type="video/${ext}">
+                            Your browser does not support the video tag.
+                        </video>
+                    `);
+                    newMediaWrapper.append(video);
+                } else {
+                    const img = $(`
+                        <img id="currentSignImage" src="${currentNote.mediaPath || 'https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp'}"
+                            alt="Current sign"
+                            class="w-auto max-w-full h-auto max-h-[70vh] object-contain">
+                    `);
+                    newMediaWrapper.append(img);
+                }
+
                 // Update progress
                 const progress = totalSigns > 1 ? ((currentSignIndex + 1) / totalSigns) * 100 : 100;
                 $('#signProgress').val(progress);
@@ -436,7 +467,13 @@
                     expandIcon.addClass('hidden');
                     collapseIcon.removeClass('hidden');
                 } else {
-                    cards.each(function (i) {
+                    // First show all cards of current type
+                    const currentType = $('#typeFilter').val();
+                    const typeCards = cards.filter(`[data-type="${currentType}"]`);
+                    typeCards.removeClass('hidden-card').show();
+                    
+                    // Then hide cards beyond index 4 (showing 5 cards)
+                    typeCards.each(function (i) {
                         if (i >= 5) $(this).addClass('hidden-card').hide();
                     });
                     textEl.text('View All');
@@ -469,43 +506,69 @@
                 const filter = $('#typeFilter').val();
                 let foundAny = false;
 
-                $('.lesson-section').each(function () {
-                    let sectionHasMatch = false;
+                // First hide all cards
+                $('.quiz-card, .note-card').hide();
 
-                    $(this).find('.quiz-card, .note-card').each(function () {
+                if (filter === 'notes') {
+                    $('#builderPlaceholder').hide();
+                } else {
+                    $('#builderPlaceholder').show();
+                }
+
+                $('.lesson-section').each(function () {
+                    const currentSection = $(this);
+                    let sectionHasMatch = false;
+                    
+                    // Get all cards that match both search and filter
+                    const matchingCards = currentSection.find('.quiz-card, .note-card').filter(function() {
                         const searchableText = $(this).data('searchable') || '';
                         const type = $(this).data('type');
-
-                        const matchSearch = !search || searchableText.includes(search);
-                        const matchFilter = filter === 'all' || filter === type;
-
-                        if (matchSearch && matchFilter) {
-                            $(this).show().removeClass('hidden-card');
-                            sectionHasMatch = true;
-                            foundAny = true;
-                        } else {
-                            $(this).hide();
-                        }
+                        return (type === filter) && (!search || searchableText.includes(search));
                     });
 
-                    if (sectionHasMatch) {
-                        $(this).show();
-                        if (search || filter !== 'all') {
-                            $(this).find('.view-all-btn').hide();
+                    // Always show sections during filtering
+                    currentSection.show();
+
+                    if (matchingCards.length > 0) {
+                        sectionHasMatch = true;
+                        foundAny = true;
+
+                        // When searching, show all matching cards
+                        if (search) {
+                            matchingCards.show();
+                            currentSection.find('.view-all-btn').hide();
                         } else {
-                            const totalCards = $(this).find('.quiz-card, .note-card').length;
-                            if (totalCards > 5) {
-                                $(this).find('.view-all-btn').show();
+                            // Not searching, apply 5-card limit
+                            matchingCards.each(function(index) {
+                                if (index < 5) {
+                                    $(this).removeClass('hidden-card').show();
+                                } else {
+                                    $(this).addClass('hidden-card').hide();
+                                }
+                            });
+
+                            // Show "View All" button only if there are more than 5 matching cards
+                            const viewAllBtn = currentSection.find('.view-all-btn');
+                            if (matchingCards.length >= 5) {
+                                viewAllBtn.show();
+                            } else {
+                                viewAllBtn.hide();
                             }
                         }
-                    } else {
-                        $(this).hide();
+                    }
+
+                    // Show empty state for sections with no matching content
+                    if (matchingCards.length === 0) {
+                        const emptySection = currentSection.find('.col-span-full');
+                        if (emptySection.length) {
+                            emptySection.show();
+                        }
                     }
                 });
 
                 // Show/hide no results message
                 $('#no-results-message').remove();
-                if (!foundAny && (search || filter !== 'all')) {
+                if (!foundAny) {
                     $('.max-w-7xl').append(`
                         <div id="no-results-message" class="text-center py-8">
                             <div class="flex flex-col items-center gap-4">
@@ -523,6 +586,10 @@
                 }
             }
 
+            // Set initial filter to quiz
+            $('#typeFilter').val('quiz');
+            filterAndSearch();
+
             // Preview note functionality
             $('.preview-note-btn').on('click', function() {
                 const mediaPath = $(this).data('media-path');
@@ -538,7 +605,7 @@
             $('.add-to-builder-btn').on('click', function() {
                 const noteId = $(this).data('note-id');
                 const noteText = $(this).data('note-text');
-                const mediaPath = $(this).closest('.note-card').find('img').attr('src');
+                let mediaPath = $(this).closest('.note-card').find('img, video source').attr('src');
                 
                 addNoteToBuilder(noteId, noteText, mediaPath);
                 
@@ -549,7 +616,6 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
-                    Added
                 `).addClass('btn-success').removeClass('btn-primary');
                 
                 setTimeout(() => {
