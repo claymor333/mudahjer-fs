@@ -168,7 +168,13 @@
                                             <button class="btn btn-sm btn-outline preview-note-btn" 
                                                     data-note-id="{{ $note->id }}"
                                                     data-media-path="{{ $note->media_path ? asset('storage/' . $note->media_path) : '' }}"
-                                                    data-note-text="{{ $note->note_text }}">
+                                                    data-note-text="{{ $note->note_text }}"
+                                                    @if($note->media_path)
+                                                    data-media-type="{{ $isVideo ? 'video' : 'image' }}"
+                                                    @if($isVideo)
+                                                    data-video-type="video/{{ $ext }}"
+                                                    @endif
+                                                    @endif>
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -265,7 +271,13 @@
             </form>
             <h3 class="font-bold text-lg mb-4">Note Preview</h3>
             <div class="flex flex-col items-center gap-4">
-                <img id="preview-image" src="" alt="Note preview" class="max-w-full max-h-96 rounded-lg shadow-lg">
+                <div id="preview-media-wrapper" class="w-full flex justify-center">
+                    <img id="preview-image" src="" alt="Note preview" class="max-w-full max-h-96 rounded-lg shadow-lg hidden">
+                    <video id="preview-video" controls class="max-w-full max-h-96 rounded-lg shadow-lg hidden">
+                        <source src="" type="">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
                 <div class="text-center">
                     <h4 class="font-semibold text-lg" id="preview-title"></h4>
                 </div>
@@ -594,10 +606,29 @@
             $('.preview-note-btn').on('click', function() {
                 const mediaPath = $(this).data('media-path');
                 const noteText = $(this).data('note-text');
+                const mediaType = $(this).data('media-type') || 'image';
+                const videoType = $(this).data('video-type');
                 
-                $('#preview-image').attr('src', mediaPath || 'https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp');
+                // Reset both media elements
+                const $image = $('#preview-image');
+                const $video = $('#preview-video');
+                $image.addClass('hidden');
+                $video.addClass('hidden');
+                
+                if (mediaType === 'video') {
+                    // Handle video
+                    const $source = $video.find('source');
+                    $source.attr('src', mediaPath);
+                    $source.attr('type', videoType);
+                    $video.removeClass('hidden')[0].load(); // Reload video with new source
+                } else {
+                    // Handle image
+                    $image
+                        .attr('src', mediaPath || 'https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp')
+                        .removeClass('hidden');
+                }
+                
                 $('#preview-title').text(noteText);
-                
                 document.getElementById('preview_modal').showModal();
             });
 
