@@ -162,8 +162,8 @@
 
                                     <div class="card-body">
                                         <h2 class="card-title">{{ $note->note_text }}</h2>
-                                        <p>Sign language note from {{ $lesson->title }}</p>
-                                        <div class="badge badge-secondary badge-sm mb-2">Note</div>
+                                        <p class="mt-1 text-sm text-base-content/70">{{ $lesson->title }}</p>
+                                        <div class="badge badge-secondary badge-sm mt-2 mb-2">Note</div>
                                         <div class="card-actions justify-end">
                                             <button class="btn btn-sm btn-outline preview-note-btn" 
                                                     data-note-id="{{ $note->id }}"
