@@ -43,6 +43,7 @@ class QuizController extends Controller
                 'title' => $lesson->title,
                 'completed' => (bool) $lesson->pivot->completed,
                 'progress' => $lesson->pivot->progress,
+                'required_level' => $lesson->required_level,
                 'completed_at' => $lesson->pivot->completed_at,
             ];
         });
