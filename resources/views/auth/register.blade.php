@@ -25,6 +25,15 @@
             @enderror
         </div>
 
+        <!-- Phone Number -->
+        <div class="mb-4">
+            <label for="phone_number" class="block text-sm font-medium text-[var(--text-primary)] mb-1">Phone Number</label>
+            <input id="phone_number" class="auth-input" type="tel" name="phone_number" value="{{ old('phone_number') }}" required autocomplete="tel" />
+            @error('phone_number')
+                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+            @enderror
+        </div>
+
         <!-- Password -->
         <div class="mb-4">
             <label for="password" class="block text-sm font-medium text-[var(--text-primary)] mb-1">Password</label>
