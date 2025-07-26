@@ -1,5 +1,14 @@
 <x-app-layout>
     <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fadeIn {
+            animation: fadeIn 0.3s ease-out;
+        }
+
         .scroll-container {
             -ms-overflow-style: none;
             scrollbar-width: none;
@@ -48,8 +57,8 @@
                     <div class="join-item flex-1 sm:flex-none">
                         <select class="select select-bordered w-full" id="typeFilter">
                             {{-- <option value="all">All Content</option> --}}
-                            <option value="quiz">Quizzes Only</option>
-                            <option value="notes">Notes Only</option>
+                            <option value="quiz">Quizzes</option>
+                            <option value="notes">Notes</option>
                         </select>
                     </div>
                     <div class="join-item relative flex-1 sm:flex-none">
@@ -118,7 +127,7 @@
                             {{-- Display Quizzes --}}
                             @php $cardIndex = 0; @endphp
                             @forelse($lesson->quizzes as $quiz)
-                                <div class="card card-border border-base-300 bg-base-100 dark:bg-base-200 w-full shadow-lg quiz-card {{ $cardIndex >= 5 ? 'hidden-card' : '' }}" data-lesson-id="{{ $lesson->id }}" data-card-index="{{ $cardIndex }}"data-type="quiz" data-searchable="{{ strtolower($quiz->title . ' ' . $quiz->description) }}">
+                                <div class="card card-border border-base-300 bg-base-100 dark:bg-base-200 w-full shadow-lg quiz-card {{ $cardIndex >= 5 ? 'hidden-card' : '' }}" data-lesson-id="{{ $lesson->id }}" data-card-index="{{ $cardIndex }}"data-type="quiz" data-searchable-string="{{ strtolower($quiz->title . ' ' . $quiz->description) }}">
                                     <div class="card-body">
                                         <h2 class="card-title truncate">{{ $quiz->title }}</h2>
                                         <p class="mb-2 truncate">{{ $quiz->description }}</p>
@@ -138,7 +147,7 @@
 
                             {{-- Display Notes --}}
                             @forelse($lesson->notes as $note)
-                                <div class="card card-border border-base-300 bg-base-100 dark:bg-base-200 w-full shadow-lg note-card hidden-card" data-lesson-id="{{ $lesson->id }}" data-card-index="{{ $cardIndex }}" data-type="notes" data-searchable="{{ strtolower($note->note_text) }}">
+                                <div class="card card-border border-base-300 bg-base-100 dark:bg-base-200 w-full shadow-lg note-card hidden-card" data-lesson-id="{{ $lesson->id }}" data-card-index="{{ $cardIndex }}" data-type="notes" data-searchable-string="{{ strtolower($note->note_text) }}">
                                     <figure>
                                         @if($note->media_path)
                                             @php
@@ -196,14 +205,14 @@
                             @endforelse
 
                             {{-- Show "Coming Soon" if no content --}}
-                            @if($lesson->quizzes->isEmpty() && $lesson->notes->isEmpty())
+                            {{-- @if($lesson->quizzes->isEmpty() && $lesson->notes->isEmpty())
                                 <div class="card card-border bg-base-200 dark:bg-base-300 w-full shadow-lg col-span-full">
                                     <div class="card-body items-center text-center">
                                         <h2 class="card-title">Coming Soon!</h2>
                                         <p class="mb-2">Thanks for your patience!</p>
                                     </div>
                                 </div>
-                            @endif
+                            @endif --}}
                         </div>
                     </div>
                 </div>
@@ -533,15 +542,14 @@
                     
                     // Get all cards that match both search and filter
                     const matchingCards = currentSection.find('.quiz-card, .note-card').filter(function() {
-                        const searchableText = $(this).data('searchable') || '';
+                        const searchableText = $(this).attr('data-searchable-string') || '';
                         const type = $(this).data('type');
                         return (type === filter) && (!search || searchableText.includes(search));
                     });
 
-                    // Always show sections during filtering
-                    currentSection.show();
-
+                    // Only show sections that have matching cards
                     if (matchingCards.length > 0) {
+                        currentSection.show();
                         sectionHasMatch = true;
                         foundAny = true;
 
@@ -569,32 +577,34 @@
                         }
                     }
 
-                    // Show empty state for sections with no matching content
+                    // Hide sections with no matching content
                     if (matchingCards.length === 0) {
-                        const emptySection = currentSection.find('.col-span-full');
-                        if (emptySection.length) {
-                            emptySection.show();
-                        }
+                        currentSection.hide();
                     }
                 });
 
                 // Show/hide no results message
-                $('#no-results-message').remove();
+                const $existingMessage = $('#no-results-message');
                 if (!foundAny) {
-                    $('.max-w-7xl').append(`
-                        <div id="no-results-message" class="text-center py-8">
-                            <div class="flex flex-col items-center gap-4">
-                                <div class="text-base-content/70">
-                                    <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                    </svg>
+                    if (!$existingMessage.length) {
+                        // Only append if message doesn't exist
+                        $('.lesson-section').first().before(`
+                            <div id="no-results-message" class="text-center py-8 animate-fadeIn">
+                                <div class="flex flex-col items-center gap-4">
+                                    <div class="text-base-content/70">
+                                        <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                    </div>
+                                    <h3 class="text-lg font-semibold">No content found</h3>
+                                    <p class="text-base-content/70">Try adjusting your search terms or filter</p>
                                 </div>
-                                <h3 class="text-lg font-semibold">No content found</h3>
-                                <p class="text-base-content/70">Try adjusting your search terms or filter</p>
                             </div>
-                        </div>
-                    `);
+                        `);
+                    }
+                } else {
+                    $existingMessage.remove();
                 }
             }
 
