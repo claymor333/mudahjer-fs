@@ -2,190 +2,625 @@
     <style>
         .scroll-container {
             -ms-overflow-style: none;
-            /* Hide scrollbar IE and Edge */
             scrollbar-width: none;
-            /* Hide scrollbar Firefox */
         }
 
         .scroll-container::-webkit-scrollbar {
             display: none;
-            /* Hide scrollbar Chrome, Safari, Opera */
         }
 
-        .card-hover {
-            transition: all 0.3s ease;
+        .card.hidden-card {
+            display: none !important;
         }
 
-        .card-hover:hover {
-            transform: translateY(-5px);
+        .quiz-card, .note-card {
+            min-height: 200px;
+        }
+
+        .note-card figure {
+            height: 200px;
+            overflow: hidden;
+        }
+
+        .note-card figure img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
     </style>
 
     <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <div>
-                <h2 class="font-semibold text-xl text-base-content">
-                    Available Signs
-                </h2>
-                <p class="mt-1 text-sm text-base-content/70">
-                    Explore our collection of interactive sign language signs
-                </p>
-            </div>
-            <label class="input">
-                <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                    <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none"
-                        stroke="currentColor">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <path d="m21 21-4.3-4.3"></path>
-                    </g>
-                </svg>
-                <input type="search" id="searchInput" class="grow" placeholder="Search signs..." />
-                <kbd class="kbd kbd-sm">CTRL</kbd>
-                <kbd class="kbd kbd-sm">K</kbd>
-            </label>
-        </div>
-    </x-slot>
-
-    <div class="py-6">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <!-- Beginner Quizzes Section -->
-
-            @foreach($lessons as $lesson)
-            <div class="mb-8">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-semibold flex items-center gap-2">
-                        {{-- <span class="badge badge-success badge-sm">Beginner</span> --}}
-                        {{ $lesson->title }}
-                    </h3>
-                    <button class="btn btn-ghost btn-sm">
-                        View All
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                        </svg>
-                    </button>
+        <div class="flex flex-col gap-4">
+            <!-- Main Header -->
+            <div class="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+                <div>
+                    <h2 class="font-semibold text-xl text-base-content">
+                        Available Signs
+                    </h2>
+                    <p class="mt-1 text-sm text-base-content/70">
+                        Explore our collection of interactive sign language signs and notes
+                    </p>
+                    <p class="mt-1 text-sm text-base-content/70 italic" id="builderPlaceholder">
+                        Want to build signs? <a class="link link-hover text-primary font-semibold" onclick="$('#typeFilter').val('notes').trigger('change')">Switch to Notes</a>
+                    </p>
                 </div>
-                <div class="scroll-container overflow-x-auto">
-                    <div class="flex gap-4 pb-4">
-                        <!-- Beginner Quiz Cards -->
-                        @forelse($lesson->quizzes as $quiz)
-                        <div class="card card-border border-base-300 bg-base-100 dark:bg-base-200 w-64 shadow-lg">
-                            <div class="card-body">
-                                <h2 class="card-title">{{ $quiz->title }}</h2>
-                                <p class="mb-2">{{ $quiz->description }}</p>
-                                <div class="card-actions justify-end">
-                                    <a href="{{ route('player.notes.show', $quiz->id) }}" id="play-button-{!! $quiz->id !!}" class="btn btn-success btn-circle">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" width="16" height="16"
-                                            fill="currentColor" class="bi bi-play-fill" viewBox="0 0 16 16">
-                                            <path
-                                                d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393" />
-                                        </svg>
-                                    </a>
-                                </div>
-                            </div>
+                <div class="join join-vertical sm:join-horizontal gap-2 w-full sm:w-auto">
+                    <div class="join-item flex-1 sm:flex-none">
+                        <select class="select select-bordered w-full" id="typeFilter">
+                            {{-- <option value="all">All Content</option> --}}
+                            <option value="quiz">Quizzes Only</option>
+                            <option value="notes">Notes Only</option>
+                        </select>
+                    </div>
+                    <div class="join-item relative flex-1 sm:flex-none">
+                        <input type="search" id="searchInput" class="input input-bordered w-full pr-20" placeholder="Search signs..." />
+                        <div class="absolute top-0 right-0 join-item h-full flex items-center pr-2">
+                            <kbd class="kbd kbd-sm">⌘</kbd>
+                            <kbd class="kbd kbd-sm ml-1">K</kbd>
                         </div>
-                        @empty
-                        <div class="card card-border bg-base-200 dark:bg-base-300 w-full shadow-lg">
-                            <div class="card-body items-center text-center">
-                                <h2 class="card-title">Coming Soon!</h2>
-                                <p class="mb-2">Thanks for your patience!</p>
-                            </div>
-                        </div>
-                        @endforelse
                     </div>
                 </div>
             </div>
+
+        </div>
+    </x-slot>
+    <div id="signBuilderWrapper" class="transition-all duration-500 ease-in-out overflow-hidden sticky top-[4rem] z-10 bg-base-100 border-b border-base-200 shadow max-h-[1000px] opacity-0">
+        <!-- Sign Builder Section -->
+        <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center py-2">
+            <div class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <fieldset class="fieldset">
+                    <legend class="fieldset-legend">
+                        <span class="label-text font-semibold">Sign Builder</span>
+                        <span class="label-text-alt" id="signCount">1 sign</span>
+                    </legend>
+                    <div class="flex gap-2 items-center">
+                        <div class="flex-1 min-h-[3rem] p-2 bg-base-100 input rounded-lg flex flex-wrap gap-2 items-center" id="signBuilderContainer"><div class="badge badge-primary gap-2 py-3 px-3">
+                        <span>2</span>
+                        <button class="btn btn-ghost btn-xs btn-circle remove-sign" data-index="0">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div></div>
+                        <button class="btn btn-primary" id="buildButton">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Build
+                        </button>
+                    </div>
+                </fieldset>
+            </div>
+        </div>
+    </div>
+    <div class="py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            @foreach($lessons as $lesson)
+                <div class="mb-8 lesson-section" data-lesson-id="{{ $lesson->id }}">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold flex items-center gap-2">
+                            {{ $lesson->title }}
+                        </h3>
+                        <button class="btn btn-ghost btn-sm view-all-btn" data-lesson-id="{{ $lesson->id }}">
+                            <span class="btn-text">View All</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 expand-icon" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 collapse-icon hidden" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="cards-container" data-lesson-id="{{ $lesson->id }}">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                            {{-- Display Quizzes --}}
+                            @php $cardIndex = 0; @endphp
+                            @forelse($lesson->quizzes as $quiz)
+                                <div class="card card-border border-base-300 bg-base-100 dark:bg-base-200 w-full shadow-lg quiz-card {{ $cardIndex >= 5 ? 'hidden-card' : '' }}" data-lesson-id="{{ $lesson->id }}" data-card-index="{{ $cardIndex }}"data-type="quiz" data-searchable="{{ strtolower($quiz->title . ' ' . $quiz->description) }}">
+                                    <div class="card-body">
+                                        <h2 class="card-title truncate">{{ $quiz->title }}</h2>
+                                        <p class="mb-2 truncate">{{ $quiz->description }}</p>
+                                        <div class="badge badge-primary badge-sm mb-2">Quiz</div>
+                                        <div class="card-actions justify-end">
+                                            <a href="{{ route('player.notes.show', $quiz->id) }}" class="btn btn-success btn-circle">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="currentColor" viewBox="0 0 16 16">
+                                                    <path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393"/>
+                                                </svg>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                @php $cardIndex++; @endphp
+                            @empty
+                            @endforelse
+
+                            {{-- Display Notes --}}
+                            @forelse($lesson->notes as $note)
+                                <div class="card card-border border-base-300 bg-base-100 dark:bg-base-200 w-full shadow-lg note-card hidden-card" data-lesson-id="{{ $lesson->id }}" data-card-index="{{ $cardIndex }}" data-type="notes" data-searchable="{{ strtolower($note->note_text) }}">
+                                    <figure>
+                                        @if($note->media_path)
+                                            @php
+                                                $ext = pathinfo($note->media_path, PATHINFO_EXTENSION);
+                                                $isVideo = in_array(strtolower($ext), ['mp4', 'webm', 'ogg']);
+                                            @endphp
+
+                                            @if($isVideo)
+                                                <video controls class="w-full h-auto max-h-60 object-contain">
+                                                    <source src="{{ asset('storage/' . $note->media_path) }}" type="video/{{ $ext }}">
+                                                    Your browser does not support the video tag.
+                                                </video>
+                                            @else
+                                                <img src="{{ asset('storage/' . $note->media_path) }}" alt="{{ $note->note_text }}" class="w-full object-contain max-h-60"/>
+                                            @endif
+                                        @else
+                                            <img src="https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp" alt="Default image"/>
+                                        @endif
+                                    </figure>
+
+
+                                    <div class="card-body">
+                                        <h2 class="card-title">{{ $note->note_text }}</h2>
+                                        <p>Sign language note from {{ $lesson->title }}</p>
+                                        <div class="badge badge-secondary badge-sm mb-2">Note</div>
+                                        <div class="card-actions justify-end">
+                                            <button class="btn btn-sm btn-outline preview-note-btn" 
+                                                    data-note-id="{{ $note->id }}"
+                                                    data-media-path="{{ $note->media_path ? asset('storage/' . $note->media_path) : '' }}"
+                                                    data-note-text="{{ $note->note_text }}">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                </svg>
+                                                Preview
+                                            </button>
+                                            <button class="btn btn-sm btn-circle btn-primary add-to-builder-btn" 
+                                                    data-note-id="{{ $note->id }}"
+                                                    data-note-text="{{ $note->note_text }}">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                @php $cardIndex++; @endphp
+                            @empty
+                            @endforelse
+
+                            {{-- Show "Coming Soon" if no content --}}
+                            @if($lesson->quizzes->isEmpty() && $lesson->notes->isEmpty())
+                                <div class="card card-border bg-base-200 dark:bg-base-300 w-full shadow-lg col-span-full">
+                                    <div class="card-body items-center text-center">
+                                        <h2 class="card-title">Coming Soon!</h2>
+                                        <p class="mb-2">Thanks for your patience!</p>
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
             @endforeach
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Add smooth scrolling to horizontal scroll containers
-            const scrollContainers = document.querySelectorAll('.scroll-container');
-            scrollContainers.forEach(container => {
-                let isDown = false;
-                let startX;
-                let scrollLeft;
+    {{-- Sign Builder Modal --}}
+    <dialog id="sign_builder_modal" class="modal">
+        <div class="modal-box w-11/12 max-w-4xl my-8">
+            <form method="dialog">
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            </form>
+            <h3 class="font-bold text-lg mb-4">Sign Builder Preview</h3>
+            
+            <div class="flex flex-col items-center gap-4">
+                <!-- Navigation Controls -->
+                <div class="flex items-center gap-4">
+                    <button class="btn btn-circle" id="prevSign" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </button>
+                    
+                    <div class="text-center">
+                        <span class="text-sm text-base-content/70">Sign</span>
+                        <div class="font-bold text-lg">
+                            <span id="currentSignIndex">1</span> of <span id="totalSigns">0</span>
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-circle" id="nextSign" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Sign Display -->
+                <div class="w-full flex flex-col items-center gap-4">
+                    <div id="signMediaWrapper" class="relative w-full bg-base-200/50 rounded-lg overflow-hidden flex items-center justify-center">
+                        <img id="currentSignImage" ...>
+                    </div>
+                    <div class="text-center">
+                        <h2 class="text-xl font-semibold" id="currentSignTitle">No signs added</h2>
+                    </div>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div class="w-full max-w-md">
+                    <progress class="progress progress-primary w-full" id="signProgress" value="0" max="100"></progress>
+                </div>
+            </div>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+            <button>close</button>
+        </form>
+    </dialog>
 
-                container.addEventListener('mousemove', (e) => {
-                    if (!isDown) return;
-                    e.preventDefault();
-                    const x = e.pageX - container.offsetLeft;
-                    const walk = (x - startX) * 2;
-                    container.scrollLeft = scrollLeft - walk;
+    {{-- Preview Modal --}}
+    <dialog id="preview_modal" class="modal">
+        <div class="modal-box w-11/12 max-w-2xl my-8">
+            <form method="dialog">
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            </form>
+            <h3 class="font-bold text-lg mb-4">Note Preview</h3>
+            <div class="flex flex-col items-center gap-4">
+                <img id="preview-image" src="" alt="Note preview" class="max-w-full max-h-96 rounded-lg shadow-lg">
+                <div class="text-center">
+                    <h4 class="font-semibold text-lg" id="preview-title"></h4>
+                </div>
+            </div>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+            <button>close</button>
+        </form>
+    </dialog>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+    <script>
+        $(function () {
+            // Sign Builder Management
+            let signBuilderNotes = [];
+            let currentSignIndex = 0;
+
+            function updateSignBuilder() {
+                const wrapper = $('#signBuilderWrapper');
+                const container = $('#signBuilderContainer');
+                const buildButton = $('#buildButton');
+                const signCount = $('#signCount');
+
+                container.empty();
+
+                if (signBuilderNotes.length === 0) {
+                    wrapper.removeClass('max-h-[1000px] opacity-100').addClass('max-h-0 opacity-0');
+                    buildButton.prop('disabled', true);
+                    signCount.text('0 signs');
+                } else {
+                    wrapper.removeClass('max-h-0 opacity-0 hidden').addClass('max-h-[1000px] opacity-100');
+                    buildButton.prop('disabled', false);
+                    signCount.text(`${signBuilderNotes.length} sign${signBuilderNotes.length !== 1 ? 's' : ''}`);
+
+                    signBuilderNotes.forEach((note, index) => {
+                        const pill = $(`
+                            <div class="badge badge-primary gap-2 py-3 px-3">
+                                <span>${note.text}</span>
+                                <button class="btn btn-ghost btn-xs btn-circle remove-sign" data-index="${index}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                        `);
+                        container.append(pill);
+                    });
+                }
+            }
+
+            function updateSignBuilderModal() {
+                const totalSigns = signBuilderNotes.length;
+                $('#totalSigns').text(totalSigns);
+                
+                if (totalSigns === 0) {
+                    $('#currentSignIndex').text('0');
+                    $('#currentSignImage').attr('src', '');
+                    $('#currentSignTitle').text('No signs added');
+                    $('#signProgress').val(0);
+                    $('#prevSign, #nextSign').prop('disabled', true);
+                    return;
+                }
+
+                // Ensure currentSignIndex is within bounds
+                if (currentSignIndex >= totalSigns) currentSignIndex = totalSigns - 1;
+                if (currentSignIndex < 0) currentSignIndex = 0;
+
+                const currentNote = signBuilderNotes[currentSignIndex];
+                $('#currentSignIndex').text(currentSignIndex + 1);
+                $('#currentSignTitle').text(currentNote.text);
+                const ext = currentNote.mediaPath?.split('.').pop().toLowerCase();
+                const isVideo = ['mp4', 'webm', 'ogg'].includes(ext);
+
+                // Create a fresh wrapper to fully reset rendering context
+                const newMediaWrapper = $(`
+                    <div id="signMediaWrapper" class="relative w-full bg-base-200/50 rounded-lg overflow-hidden flex items-center justify-center"></div>
+                `);
+                $('#signMediaWrapper').replaceWith(newMediaWrapper);
+
+                if (isVideo) {
+                    const video = $(`
+                        <video controls class="w-auto max-w-full h-auto max-h-[70vh] object-contain">
+                            <source src="${currentNote.mediaPath}" type="video/${ext}">
+                            Your browser does not support the video tag.
+                        </video>
+                    `);
+                    newMediaWrapper.append(video);
+                } else {
+                    const img = $(`
+                        <img id="currentSignImage" src="${currentNote.mediaPath || 'https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp'}"
+                            alt="Current sign"
+                            class="w-auto max-w-full h-auto max-h-[70vh] object-contain">
+                    `);
+                    newMediaWrapper.append(img);
+                }
+
+                // Update progress
+                const progress = totalSigns > 1 ? ((currentSignIndex + 1) / totalSigns) * 100 : 100;
+                $('#signProgress').val(progress);
+                
+                // Update navigation buttons
+                $('#prevSign').prop('disabled', currentSignIndex === 0);
+                $('#nextSign').prop('disabled', currentSignIndex === totalSigns - 1);
+            }
+
+            // Add note to sign builder
+            function addNoteToBuilder(noteId, noteText, mediaPath) {
+                // Generate unique identifier for each instance
+                const uniqueId = Date.now() + Math.random();
+                
+                signBuilderNotes.push({
+                    id: noteId,
+                    uniqueId: uniqueId,
+                    text: noteText,
+                    mediaPath: mediaPath
                 });
+                
+                updateSignBuilder();
+            }
+
+            // Remove note from sign builder
+            $(document).on('click', '.remove-sign', function() {
+                const index = parseInt($(this).data('index'));
+                signBuilderNotes.splice(index, 1);
+                
+                // Adjust current sign index if necessary
+                if (currentSignIndex >= signBuilderNotes.length && signBuilderNotes.length > 0) {
+                    currentSignIndex = signBuilderNotes.length - 1;
+                } else if (signBuilderNotes.length === 0) {
+                    currentSignIndex = 0;
+                }
+                
+                updateSignBuilder();
+                updateSignBuilderModal();
             });
 
-            // Search functionality
-            const searchInput = document.getElementById('searchInput');
-            const quizCards = document.querySelectorAll('.card');
-            let searchTimeout;
-
-            // Focus search input with keyboard shortcut
-            document.addEventListener('keydown', function(e) {
-                if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-                    e.preventDefault();
-                    searchInput.focus();
+            // Build button click
+            $('#buildButton').on('click', function() {
+                if (signBuilderNotes.length > 0) {
+                    currentSignIndex = 0;
+                    updateSignBuilderModal();
+                    document.getElementById('sign_builder_modal').showModal();
                 }
             });
 
-            // Search implementation
-            searchInput.addEventListener('input', function(e) {
-                clearTimeout(searchTimeout);
-                
-                searchTimeout = setTimeout(() => {
-                    const searchTerm = e.target.value.toLowerCase().trim();
-                    let hasResults = false;
+            // Navigation in sign builder modal
+            $('#prevSign').on('click', function() {
+                if (currentSignIndex > 0) {
+                    currentSignIndex--;
+                    updateSignBuilderModal();
+                }
+            });
 
-                    // Get all lesson sections
-                    const lessonSections = document.querySelectorAll('.mb-8');
+            $('#nextSign').on('click', function() {
+                if (currentSignIndex < signBuilderNotes.length - 1) {
+                    currentSignIndex++;
+                    updateSignBuilderModal();
+                }
+            });
+
+            // Keyboard navigation in modal
+            $(document).on('keydown', function(e) {
+                if ($('#sign_builder_modal')[0].open) {
+                    if (e.key === 'ArrowLeft') {
+                        e.preventDefault();
+                        $('#prevSign').click();
+                    } else if (e.key === 'ArrowRight') {
+                        e.preventDefault();
+                        $('#nextSign').click();
+                    }
+                }
+            });
+
+            // Initialize sign builder
+            updateSignBuilder();
+
+            // Initialize view all buttons
+            $('.lesson-section').each(function () {
+                const totalCards = $(this).find('.quiz-card, .note-card').length;
+                if (totalCards <= 5) {
+                    $(this).find('.view-all-btn').hide();
+                }
+            });
+
+            // View all / collapse functionality
+            $('.view-all-btn').click(function () {
+                const lessonId = $(this).data('lesson-id');
+                const lesson = $(`.lesson-section[data-lesson-id="${lessonId}"]`);
+                const cards = lesson.find('.quiz-card, .note-card');
+                const hidden = cards.filter('.hidden-card');
+                const textEl = $(this).find('.btn-text');
+                const expandIcon = $(this).find('.expand-icon');
+                const collapseIcon = $(this).find('.collapse-icon');
+
+                if (hidden.length) {
+                    hidden.removeClass('hidden-card').show();
+                    textEl.text('Collapse');
+                    expandIcon.addClass('hidden');
+                    collapseIcon.removeClass('hidden');
+                } else {
+                    // First show all cards of current type
+                    const currentType = $('#typeFilter').val();
+                    const typeCards = cards.filter(`[data-type="${currentType}"]`);
+                    typeCards.removeClass('hidden-card').show();
                     
-                    lessonSections.forEach(section => {
-                        let sectionHasResults = false;
-                        const cards = section.querySelectorAll('.card');
-                        
-                        cards.forEach(card => {
-                            const title = card.querySelector('.card-title').textContent.toLowerCase();
-                            const description = card.querySelector('p').textContent.toLowerCase();
-                            const matches = title.includes(searchTerm) || description.includes(searchTerm);
-                            
-                            if (matches) {
-                                card.style.display = '';
-                                sectionHasResults = true;
-                                hasResults = true;
-                            } else {
-                                card.style.display = 'none';
-                            }
-                        });
-                        
-                        // Show/hide the entire section based on results
-                        section.style.display = sectionHasResults ? '' : 'none';
+                    // Then hide cards beyond index 4 (showing 5 cards)
+                    typeCards.each(function (i) {
+                        if (i >= 5) $(this).addClass('hidden-card').hide();
+                    });
+                    textEl.text('View All');
+                    expandIcon.removeClass('hidden');
+                    collapseIcon.addClass('hidden');
+                }
+            });
+
+            // Keyboard shortcut for search
+            $(document).on('keydown', function (e) {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                    e.preventDefault();
+                    $('#searchInput').focus();
+                }
+            });
+
+            // Search and filter functionality
+            let debounce;
+            $('#searchInput').on('input', function () {
+                clearTimeout(debounce);
+                debounce = setTimeout(() => {
+                    filterAndSearch();
+                }, 300);
+            });
+
+            $('#typeFilter').on('change', filterAndSearch);
+
+            function filterAndSearch() {
+                const search = $('#searchInput').val().toLowerCase().trim();
+                const filter = $('#typeFilter').val();
+                let foundAny = false;
+
+                // First hide all cards
+                $('.quiz-card, .note-card').hide();
+
+                if (filter === 'notes') {
+                    $('#builderPlaceholder').hide();
+                } else {
+                    $('#builderPlaceholder').show();
+                }
+
+                $('.lesson-section').each(function () {
+                    const currentSection = $(this);
+                    let sectionHasMatch = false;
+                    
+                    // Get all cards that match both search and filter
+                    const matchingCards = currentSection.find('.quiz-card, .note-card').filter(function() {
+                        const searchableText = $(this).data('searchable') || '';
+                        const type = $(this).data('type');
+                        return (type === filter) && (!search || searchableText.includes(search));
                     });
 
-                    // Show no results message if needed
-                    const existingNoResults = document.getElementById('no-results-message');
-                    if (!hasResults && !existingNoResults && searchTerm !== '') {
-                        const noResults = document.createElement('div');
-                        noResults.id = 'no-results-message';
-                        noResults.className = 'text-center py-8';
-                        noResults.innerHTML = `
+                    // Always show sections during filtering
+                    currentSection.show();
+
+                    if (matchingCards.length > 0) {
+                        sectionHasMatch = true;
+                        foundAny = true;
+
+                        // When searching, show all matching cards
+                        if (search) {
+                            matchingCards.show();
+                            currentSection.find('.view-all-btn').hide();
+                        } else {
+                            // Not searching, apply 5-card limit
+                            matchingCards.each(function(index) {
+                                if (index < 5) {
+                                    $(this).removeClass('hidden-card').show();
+                                } else {
+                                    $(this).addClass('hidden-card').hide();
+                                }
+                            });
+
+                            // Show "View All" button only if there are more than 5 matching cards
+                            const viewAllBtn = currentSection.find('.view-all-btn');
+                            if (matchingCards.length >= 5) {
+                                viewAllBtn.show();
+                            } else {
+                                viewAllBtn.hide();
+                            }
+                        }
+                    }
+
+                    // Show empty state for sections with no matching content
+                    if (matchingCards.length === 0) {
+                        const emptySection = currentSection.find('.col-span-full');
+                        if (emptySection.length) {
+                            emptySection.show();
+                        }
+                    }
+                });
+
+                // Show/hide no results message
+                $('#no-results-message').remove();
+                if (!foundAny) {
+                    $('.max-w-7xl').append(`
+                        <div id="no-results-message" class="text-center py-8">
                             <div class="flex flex-col items-center gap-4">
                                 <div class="text-base-content/70">
                                     <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                     </svg>
                                 </div>
-                                <h3 class="text-lg font-semibold">No signs found</h3>
-                                <p class="text-base-content/70">Try adjusting your search terms</p>
+                                <h3 class="text-lg font-semibold">No content found</h3>
+                                <p class="text-base-content/70">Try adjusting your search terms or filter</p>
                             </div>
-                        `;
-                        document.querySelector('.max-w-7xl').appendChild(noResults);
-                    } else if (hasResults && existingNoResults) {
-                        existingNoResults.remove();
-                    }
-                }, 300); // Debounce delay
+                        </div>
+                    `);
+                }
+            }
+
+            // Set initial filter to quiz
+            $('#typeFilter').val('quiz');
+            filterAndSearch();
+
+            // Preview note functionality
+            $('.preview-note-btn').on('click', function() {
+                const mediaPath = $(this).data('media-path');
+                const noteText = $(this).data('note-text');
+                
+                $('#preview-image').attr('src', mediaPath || 'https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp');
+                $('#preview-title').text(noteText);
+                
+                document.getElementById('preview_modal').showModal();
+            });
+
+            // Add to sign builder functionality (updated)
+            $('.add-to-builder-btn').on('click', function() {
+                const noteId = $(this).data('note-id');
+                const noteText = $(this).data('note-text');
+                let mediaPath = $(this).closest('.note-card').find('img, video source').attr('src');
+                
+                addNoteToBuilder(noteId, noteText, mediaPath);
+                
+                // Visual feedback
+                const button = $(this);
+                const originalText = button.html();
+                button.html(`
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                `).addClass('btn-success').removeClass('btn-primary');
+                
+                setTimeout(() => {
+                    button.html(originalText).removeClass('btn-success').addClass('btn-primary');
+                }, 1500);
             });
         });
     </script>

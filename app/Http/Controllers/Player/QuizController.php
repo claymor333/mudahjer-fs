@@ -49,7 +49,7 @@ class QuizController extends Controller
     public function indexNote()
     {
         // fetch all lessons with their related quiz
-        $lessons = Lesson::with('quizzes')->get();
+        $lessons = Lesson::with(['quizzes', 'notes'])->get();
 
         // log the data as an array, not the Eloquent collection directly
         Log::info('Fetching lessons for quizzes', [
@@ -63,12 +63,6 @@ class QuizController extends Controller
     {
         $quiz = Quiz::with([
             'lesson',
-            'questions' => function ($query) {
-                $query->orderBy('id', 'asc')
-                    ->with(['choices' => function ($q) {
-                        $q->orderBy('id', 'asc');
-                    }]);
-            },
             'notes' => function ($query) {
                 $query->orderBy('id', 'asc');
             }

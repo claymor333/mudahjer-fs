@@ -22,6 +22,18 @@ class Lesson extends Model
     {
         return $this->hasMany(Quiz::class);
     }
+
+    public function notes()
+    {
+        return $this->hasManyThrough(
+            Note::class,
+            Quiz::class,
+            'lesson_id',   // Foreign key on quizzes table
+            'quiz_id',     // Foreign key on notes table
+            'id',          // Local key on lessons table
+            'id'           // Local key on quizzes table
+        );
+    }
 }
 
 

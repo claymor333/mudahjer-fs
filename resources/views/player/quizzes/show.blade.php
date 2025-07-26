@@ -248,10 +248,17 @@
         function renderCurrentNote() {
             const note = quizData.notes[currentNoteIndex];
 
+            const isVideo = /\.(mp4|webm|ogg)$/i.test(note.note_media);
+
             const noteHtml = `
                 <div class="card bg-base-100 shadow-md max-w-md">
                     <figure class="px-4 pt-4">
-                        <img src="/storage/${note.note_media}" alt="Note Media" class="rounded-lg shadow">
+                        ${isVideo 
+                            ? `<video controls class="rounded-lg shadow max-h-[35vh] mx-auto">
+                                    <source src="/storage/${note.note_media}" type="video/mp4">
+                                    Your browser does not support the video tag.
+                            </video>`
+                            : `<img src="/storage/${note.note_media}" alt="Note Media" class="rounded-lg shadow max-h-[35vh] mx-auto object-contain">`}
                     </figure>
                     <div class="card-body">
                         <p class="text-base-content">${note.note_text}</p>
@@ -317,11 +324,21 @@
             $('#question-counter').text(`${currentQuestionIndex + 1} of ${totalQuestions}`);
             $('#question-text').text(question.question_text);
 
+            console.log('Displaying question:', question.question_text);
+
             if (question.media_path) {
-                $('#question-image').attr('src', '/storage/'+question.media_path);
-                $('#question-media').show();
+                const isVideo = /\.(mp4|webm|ogg)$/i.test(question.media_path);
+
+                const mediaHtml = isVideo 
+                    ? `<video controls class="w-full h-auto rounded-lg shadow-md object-contain">
+                            <source src="/storage/${question.media_path}" type="video/mp4">
+                            Your browser does not support the video tag.
+                    </video>`
+                    : `<img src="/storage/${question.media_path}" alt="Question media" class="w-full h-auto rounded-lg shadow-md object-contain">`;
+
+                $('#question-media').html(mediaHtml).show();
             } else {
-                $('#question-media').hide();
+                $('#question-media').hide().empty();
             }
 
             // choices display breakpoints, 2 choices = 1 column, 3-4 choices = 2 columns, 5+ choices = 3 columns
@@ -366,8 +383,14 @@
                     choiceContent += `<span>${choice.choice_text}</span>`;
                 }
                 if (choice.choice_media) {
-                    choiceContent += `
-                        <img id="choice-media" src="/storage/${choice.choice_media}" 
+                    const isVideo = /\.(mp4|webm|ogg)$/i.test(choice.choice_media);
+
+                    choiceContent += isVideo 
+                        ? `<video controls class="rounded-lg shadow-md mt-2 max-h-[30vh] object-contain">
+                                <source src="/storage/${choice.choice_media}" type="video/mp4">
+                                Your browser does not support the video tag.
+                        </video>`
+                        : `<img id="choice-media" src="/storage/${choice.choice_media}" 
                             alt="Choice media" 
                             class="rounded-lg shadow-md mt-2 object-contain">`;
                 }
