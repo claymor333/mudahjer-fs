@@ -10,6 +10,7 @@ class Lesson extends Model
     protected $fillable = [
         'title',
         'description',
+        'required_level',
     ];
 
     public function player()
