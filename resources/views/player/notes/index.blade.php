@@ -59,6 +59,7 @@
                             {{-- <option value="all">All Content</option> --}}
                             <option value="quiz">Quizzes</option>
                             <option value="notes">Notes</option>
+                            <option value="alphabetic">Alphabetic</option>
                         </select>
                     </div>
                     <div class="join-item relative flex-1 sm:flex-none">
@@ -102,7 +103,9 @@
             </div>
         </div>
     </div>
-    <div class="py-6">
+
+    <!-- Regular lesson sections -->
+    <div class="py-6" id="regularSections">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             @foreach($lessons as $lesson)
                 <div class="mb-8 lesson-section" data-lesson-id="{{ $lesson->id }}">
@@ -147,7 +150,7 @@
 
                             {{-- Display Notes --}}
                             @forelse($lesson->notes as $note)
-                                <div class="card card-border border-base-300 bg-base-100 dark:bg-base-200 w-full shadow-lg note-card hidden-card" data-lesson-id="{{ $lesson->id }}" data-card-index="{{ $cardIndex }}" data-type="notes" data-searchable-string="{{ strtolower($note->note_text) }}">
+                                <div class="card card-border border-base-300 bg-base-100 dark:bg-base-200 w-full shadow-lg note-card hidden-card" data-lesson-id="{{ $lesson->id }}" data-card-index="{{ $cardIndex }}" data-type="notes" data-searchable-string="{{ strtolower($note->note_text) }}" data-note-text="{{ $note->note_text }}">
                                     <figure>
                                         @if($note->media_path)
                                             @php
@@ -217,6 +220,13 @@
                     </div>
                 </div>
             @endforeach
+        </div>
+    </div>
+
+    <!-- Alphabetic sections (initially hidden) -->
+    <div class="py-6 hidden" id="alphabeticSections">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- These sections will be dynamically populated -->
         </div>
     </div>
 
@@ -304,6 +314,7 @@
             // Sign Builder Management
             let signBuilderNotes = [];
             let currentSignIndex = 0;
+            let alphabeticData = null; // Cache for alphabetic data
 
             function updateSignBuilder() {
                 const wrapper = $('#signBuilderWrapper');
@@ -391,6 +402,196 @@
                 // Update navigation buttons
                 $('#prevSign').prop('disabled', currentSignIndex === 0);
                 $('#nextSign').prop('disabled', currentSignIndex === totalSigns - 1);
+            }
+
+            // Generate alphabetic sections
+            function generateAlphabeticSections() {
+                if (alphabeticData) return alphabeticData; // Return cached data
+
+                // Collect all notes from all lessons
+                const allNotes = [];
+                $('.note-card').each(function() {
+                    const noteText = $(this).data('note-text');
+                    if (noteText) {
+                        allNotes.push({
+                            element: $(this).clone(),
+                            text: noteText.toString().trim()
+                        });
+                    }
+                });
+
+                // Sort notes alphanumerically
+                allNotes.sort((a, b) => {
+                    return a.text.toLowerCase().localeCompare(b.text.toLowerCase(), undefined, {
+                        numeric: true,
+                        sensitivity: 'base'
+                    });
+                });
+
+                // Group notes by first character
+                const grouped = {};
+                allNotes.forEach(note => {
+                    const firstChar = note.text.charAt(0).toUpperCase();
+                    let section;
+                    
+                    if (/[0-9]/.test(firstChar) || !/[A-Z]/.test(firstChar)) {
+                        section = '#'; // Numbers and symbols
+                    } else {
+                        section = firstChar;
+                    }
+                    
+                    if (!grouped[section]) {
+                        grouped[section] = [];
+                    }
+                    grouped[section].push(note);
+                });
+
+                // Create sorted sections (# first, then A-Z)
+                const sections = {};
+                const sortedKeys = Object.keys(grouped).sort((a, b) => {
+                    if (a === '#') return -1;
+                    if (b === '#') return 1;
+                    return a.localeCompare(b);
+                });
+
+                sortedKeys.forEach(key => {
+                    sections[key] = grouped[key];
+                });
+
+                alphabeticData = sections;
+                return sections;
+            }
+
+            function renderAlphabeticSections() {
+                const sections = generateAlphabeticSections();
+                const container = $('#alphabeticSections .max-w-7xl');
+                container.empty();
+
+                Object.keys(sections).forEach(sectionKey => {
+                    const notes = sections[sectionKey];
+                    let cardIndex = 0;
+
+                    const sectionElement = $(`
+                        <div class="mb-8 alphabetic-section" data-section="${sectionKey}">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-semibold flex items-center gap-2">
+                                    ${sectionKey}
+                                </h3>
+                                <button class="btn btn-ghost btn-sm view-all-btn-alpha" data-section="${sectionKey}" ${notes.length <= 5 ? 'style="display: none;"' : ''}>
+                                    <span class="btn-text">View All</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 expand-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                    </svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 collapse-icon hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="cards-container-alpha" data-section="${sectionKey}">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                                </div>
+                            </div>
+                        </div>
+                    `);
+
+                    const grid = sectionElement.find('.grid');
+                    notes.forEach(note => {
+                        const cardElement = note.element;
+                        cardElement.removeClass('hidden-card');
+                        cardElement.attr('data-alphabetic-index', cardIndex);
+                        
+                        if (cardIndex >= 5) {
+                            cardElement.addClass('hidden-card');
+                        }
+                        
+                        grid.append(cardElement);
+                        cardIndex++;
+                    });
+
+                    container.append(sectionElement);
+                });
+
+                // Reattach event handlers for cloned elements
+                attachAlphabeticEventHandlers();
+            }
+
+            function attachAlphabeticEventHandlers() {
+                // Preview button handlers for alphabetic sections
+                $('#alphabeticSections .preview-note-btn').off('click').on('click', function() {
+                    const mediaPath = $(this).data('media-path');
+                    const noteText = $(this).data('note-text');
+                    const mediaType = $(this).data('media-type') || 'image';
+                    const videoType = $(this).data('video-type');
+                    
+                    // Reset both media elements
+                    const $image = $('#preview-image');
+                    const $video = $('#preview-video');
+                    $image.addClass('hidden');
+                    $video.addClass('hidden');
+                    
+                    if (mediaType === 'video') {
+                        // Handle video
+                        const $source = $video.find('source');
+                        $source.attr('src', mediaPath);
+                        $source.attr('type', videoType);
+                        $video.removeClass('hidden')[0].load(); // Reload video with new source
+                    } else {
+                        // Handle image
+                        $image
+                            .attr('src', mediaPath || 'https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp')
+                            .removeClass('hidden');
+                    }
+                    
+                    $('#preview-title').text(noteText);
+                    document.getElementById('preview_modal').showModal();
+                });
+
+                // Add to builder button handlers for alphabetic sections
+                $('#alphabeticSections .add-to-builder-btn').off('click').on('click', function() {
+                    const noteId = $(this).data('note-id');
+                    const noteText = $(this).data('note-text');
+                    let mediaPath = $(this).closest('.note-card').find('img, video source').attr('src');
+                    
+                    addNoteToBuilder(noteId, noteText, mediaPath);
+                    
+                    // Visual feedback
+                    const button = $(this);
+                    const originalText = button.html();
+                    button.html(`
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    `).addClass('btn-success').removeClass('btn-primary');
+                    
+                    setTimeout(() => {
+                        button.html(originalText).removeClass('btn-success').addClass('btn-primary');
+                    }, 1500);
+                });
+
+                // View all button handlers for alphabetic sections
+                $('.view-all-btn-alpha').off('click').on('click', function() {
+                    const section = $(this).data('section');
+                    const sectionEl = $(`.alphabetic-section[data-section="${section}"]`);
+                    const cards = sectionEl.find('.note-card');
+                    const hidden = cards.filter('.hidden-card');
+                    const textEl = $(this).find('.btn-text');
+                    const expandIcon = $(this).find('.expand-icon');
+                    const collapseIcon = $(this).find('.collapse-icon');
+
+                    if (hidden.length) {
+                        hidden.removeClass('hidden-card').show();
+                        textEl.text('Collapse');
+                        expandIcon.addClass('hidden');
+                        collapseIcon.removeClass('hidden');
+                    } else {
+                        cards.each(function (i) {
+                            if (i >= 5) $(this).addClass('hidden-card').hide();
+                        });
+                        textEl.text('View All');
+                        expandIcon.removeClass('hidden');
+                        collapseIcon.addClass('hidden');
+                    }
+                });
             }
 
             // Add note to sign builder
@@ -527,68 +728,134 @@
                 const filter = $('#typeFilter').val();
                 let foundAny = false;
 
-                // First hide all cards
-                $('.quiz-card, .note-card').hide();
-
-                if (filter === 'notes') {
+                // Show/hide appropriate sections based on filter
+                if (filter === 'alphabetic') {
+                    $('#regularSections').hide();
+                    $('#alphabeticSections').show();
                     $('#builderPlaceholder').hide();
-                } else {
-                    $('#builderPlaceholder').show();
-                }
-
-                $('.lesson-section').each(function () {
-                    const currentSection = $(this);
-                    let sectionHasMatch = false;
                     
-                    // Get all cards that match both search and filter
-                    const matchingCards = currentSection.find('.quiz-card, .note-card').filter(function() {
-                        const searchableText = $(this).attr('data-searchable-string') || '';
-                        const type = $(this).data('type');
-                        return (type === filter) && (!search || searchableText.includes(search));
-                    });
-
-                    // Only show sections that have matching cards
-                    if (matchingCards.length > 0) {
-                        currentSection.show();
-                        sectionHasMatch = true;
-                        foundAny = true;
-
-                        // When searching, show all matching cards
-                        if (search) {
-                            matchingCards.show();
-                            currentSection.find('.view-all-btn').hide();
-                        } else {
-                            // Not searching, apply 5-card limit
-                            matchingCards.each(function(index) {
+                    // Generate alphabetic sections if not already done
+                    if (!alphabeticData) {
+                        renderAlphabeticSections();
+                    }
+                    
+                    // Apply search to alphabetic sections
+                    if (search) {
+                        $('.alphabetic-section').each(function() {
+                            const section = $(this);
+                            const cards = section.find('.note-card');
+                            let sectionHasMatch = false;
+                            
+                            cards.each(function() {
+                                const searchableText = $(this).attr('data-searchable-string') || '';
+                                if (searchableText.includes(search)) {
+                                    $(this).removeClass('hidden-card').show();
+                                    sectionHasMatch = true;
+                                    foundAny = true;
+                                } else {
+                                    $(this).addClass('hidden-card').hide();
+                                }
+                            });
+                            
+                            if (sectionHasMatch) {
+                                section.show();
+                                section.find('.view-all-btn-alpha').hide(); // Hide view all when searching
+                            } else {
+                                section.hide();
+                            }
+                        });
+                    } else {
+                        // Not searching, show all sections and apply normal limits
+                        $('.alphabetic-section').show();
+                        $('.alphabetic-section').each(function() {
+                            const section = $(this);
+                            const cards = section.find('.note-card');
+                            
+                            cards.each(function(index) {
                                 if (index < 5) {
                                     $(this).removeClass('hidden-card').show();
                                 } else {
                                     $(this).addClass('hidden-card').hide();
                                 }
                             });
+                            
+                            // Show view all button if more than 5 cards
+                            if (cards.length > 5) {
+                                section.find('.view-all-btn-alpha').show();
+                            }
+                            
+                            foundAny = true;
+                        });
+                    }
+                } else {
+                    // Regular quiz/notes filtering
+                    $('#regularSections').show();
+                    $('#alphabeticSections').hide();
+                    
+                    if (filter === 'notes') {
+                        $('#builderPlaceholder').hide();
+                    } else {
+                        $('#builderPlaceholder').show();
+                    }
 
-                            // Show "View All" button only if there are more than 5 matching cards
-                            const viewAllBtn = currentSection.find('.view-all-btn');
-                            if (matchingCards.length >= 5) {
-                                viewAllBtn.show();
+                    // First hide all cards
+                    $('.quiz-card, .note-card').hide();
+
+                    $('.lesson-section').each(function () {
+                        const currentSection = $(this);
+                        let sectionHasMatch = false;
+                        
+                        // Get all cards that match both search and filter
+                        const matchingCards = currentSection.find('.quiz-card, .note-card').filter(function() {
+                            const searchableText = $(this).attr('data-searchable-string') || '';
+                            const type = $(this).data('type');
+                            return (type === filter) && (!search || searchableText.includes(search));
+                        });
+
+                        // Only show sections that have matching cards
+                        if (matchingCards.length > 0) {
+                            currentSection.show();
+                            sectionHasMatch = true;
+                            foundAny = true;
+
+                            // When searching, show all matching cards
+                            if (search) {
+                                matchingCards.show();
+                                currentSection.find('.view-all-btn').hide();
                             } else {
-                                viewAllBtn.hide();
+                                // Not searching, apply 5-card limit
+                                matchingCards.each(function(index) {
+                                    if (index < 5) {
+                                        $(this).removeClass('hidden-card').show();
+                                    } else {
+                                        $(this).addClass('hidden-card').hide();
+                                    }
+                                });
+
+                                // Show "View All" button only if there are more than 5 matching cards
+                                const viewAllBtn = currentSection.find('.view-all-btn');
+                                if (matchingCards.length >= 5) {
+                                    viewAllBtn.show();
+                                } else {
+                                    viewAllBtn.hide();
+                                }
                             }
                         }
-                    }
 
-                    // Hide sections with no matching content
-                    if (matchingCards.length === 0) {
-                        currentSection.hide();
-                    }
-                });
+                        // Hide sections with no matching content
+                        if (matchingCards.length === 0) {
+                            currentSection.hide();
+                        }
+                    });
+                }
 
                 // Show/hide no results message
                 const $existingMessage = $('#no-results-message');
                 if (!foundAny) {
                     if (!$existingMessage.length) {
                         // Only append if message doesn't exist
-                        $('.lesson-section').first().before(`
+                        const targetContainer = filter === 'alphabetic' ? '#alphabeticSections .max-w-7xl' : '#regularSections .max-w-7xl';
+                        $(targetContainer).prepend(`
                             <div id="no-results-message" class="text-center py-8 animate-fadeIn">
                                 <div class="flex flex-col items-center gap-4">
                                     <div class="text-base-content/70">
