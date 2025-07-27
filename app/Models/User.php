@@ -50,11 +50,8 @@ class User extends Authenticatable
         ];
     }
 
-    /**
-     * Get the player's profile associated with the user.
-     */
     public function player()
     {
-        return $this->hasOne(Player::class, 'user_id');
+        return $this->hasOne(Player::class);
     }
 }

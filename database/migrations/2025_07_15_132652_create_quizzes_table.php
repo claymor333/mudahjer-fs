@@ -17,7 +17,6 @@ return new class extends Migration
     {
           Schema::create('lessons', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('lesson_id')->constrained('lessons')->onDelete('cascade');
             $table->string('title');
             $table->text('description')->nullable();
             $table->tinyInteger('required_level')->default(1);
