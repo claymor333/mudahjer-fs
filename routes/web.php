@@ -31,10 +31,14 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     Route::get('/quizzes/{id}/edit', [QuizController::class, 'editQuiz'])->name('quizzes.edit');
     Route::put('/quizzes/{id}/update', [QuizController::class, 'updateQuiz'])->name('quizzes.update');
-
     Route::delete('/quizzes/{id}/delete', [QuizController::class, 'deleteQuiz'])->name('quizzes.delete');
 
-    Route::post('/quizzes/lesson/store', [QuizController::class, 'storeLesson'])->name('lessons.store');
+    Route::post('/quizzes/lessons/store', [QuizController::class, 'storeLesson'])->name('lessons.store');
+    Route::get('/quizzes/lessons/{id}/show', [QuizController::class, 'getLesson'])->name('lessons.show');
+    Route::put('/quizzes/lessons/{id}/update', [QuizController::class, 'updateLesson'])->name('lessons.update');
+    Route::delete('/quizzes/lessons/{id}/delete', [QuizController::class, 'deleteLesson'])->name('lessons.delete');
+
 });
+
 
 require __DIR__.'/auth.php';

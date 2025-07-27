@@ -359,7 +359,8 @@ class QuizController extends Controller
     {
         $validated = request()->validate([
             'title' => 'required|string|max:255',
-            'description' => 'nullable|string'
+            'description' => 'nullable|string',
+            'required_level' => 'required|integer|min:1',
         ]);
 
         try {
@@ -382,6 +383,54 @@ class QuizController extends Controller
                 'success' => false,
                 'message' => 'Failed to create lesson. Please try again.'
             ], 500);
+        }
+    }
+
+    public function getLesson($id)
+    {
+        try {
+            $lesson = Lesson::findOrFail($id);
+            return response()->json($lesson);
+        } catch (\Exception $e) {
+            Log::error("Failed to fetch lesson with ID $id: " . $e->getMessage());
+            return response()->json(['error' => 'Lesson not found.'], 404);
+        }
+    }
+
+    public function updateLesson(Request $request, $id)
+    {
+        try {
+            $lesson = Lesson::findOrFail($id);
+
+            $request->validate([
+                'title' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'required_level' => 'required|integer|min:1',
+            ]);
+
+            $lesson->update([
+                'title' => $request->title,
+                'description' => $request->description,
+                'required_level' => $request->required_level,
+            ]);
+
+            return response()->json($lesson);
+        } catch (\Exception $e) {
+            Log::error("Failed to update lesson with ID $id: " . $e->getMessage());
+            return response()->json(['error' => 'Failed to update lesson.'], 500);
+        }
+    }
+
+    public function deleteLesson($id)
+    {
+        try {
+            $lesson = Lesson::findOrFail($id);
+            $lesson->delete();
+
+            return response()->json(['message' => 'Lesson deleted successfully']);
+        } catch (\Exception $e) {
+            Log::error("Failed to delete lesson with ID $id: " . $e->getMessage());
+            return response()->json(['error' => 'Failed to delete lesson.'], 500);
         }
     }
 }
