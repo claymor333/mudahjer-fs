@@ -140,22 +140,34 @@
                 <div id="results-card" class="card-body hidden">
                     <div class="text-center">
                         <div class="mb-6">
+                            <div id="grade-emoji" class="text-4xl mb-4">😊</div>
                             <div class="radial-progress text-primary" style="--value:0; --size:6rem;" id="score-progress">
                                 <span id="score-percentage" class="text-lg font-bold">0%</span>
                             </div>
                         </div>
-                        <h2 class="card-title text-2xl mb-4">Quiz Completed!</h2>
-                        <div class="stats shadow mb-6">
+                        <h2 class="card-title text-2xl mb-4 justify-center">Quiz Completed!</h2>
+                        <div class="stats stats-vertical lg:stats-horizontal shadow mb-6">
                             <div class="stat">
-                                <div class="stat-title">Score</div>
-                                <div class="stat-value" id="final-score">0/0</div>
-                                <div class="stat-desc" id="score-desc">0% correct</div>
+                                <div class="stat-title">Total Questions</div>
+                                <div class="stat-value" id="total-questions">0</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-title">Grade</div>
+                                <div class="stat-value text-primary" id="grade">-</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-title">Correct</div>
+                                <div class="stat-value text-success" id="correct-answers">0</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-title">Incorrect</div>
+                                <div class="stat-value text-error" id="incorrect-answers">0</div>
                             </div>
                         </div>
                         <div class="card-actions justify-center">
                             <button id="restart-btn" class="btn btn-primary">Restart Quiz</button>
                             <button id="review-btn" class="btn btn-outline">Review Answers</button>
-                            <a href="{{ route('dashboard') }}" id="finish-btn" class="btn btn-success">Finish</a>
+                            <a href="{{ route('player.quizzes.index') }}" id="finish-btn" class="btn btn-success">Finish</a>
                         </div>
                     </div>
                 </div>
@@ -528,10 +540,32 @@
             $('#question-card').hide();
             $('#results-card').show();
             
+            // Update progress circle and percentage
             $('#score-progress').css('--value', percentage);
             $('#score-percentage').text(`${percentage}%`);
-            $('#final-score').text(`${correctAnswers}/${totalQuestions}`);
-            $('#score-desc').text(`${percentage}% correct`);
+
+            // Update statistics
+            $('#total-questions').text(totalQuestions);
+            $('#correct-answers').text(correctAnswers);
+            $('#incorrect-answers').text(totalQuestions - correctAnswers);
+
+            // Determine grade and emoji
+            let grade;
+            let emoji;
+            if (percentage >= 80) {
+                grade = 'A';
+                emoji = '😊';
+            } else if (percentage >= 60) {
+                grade = 'B';
+                emoji = '😐';
+            } else {
+                grade = 'C';
+                emoji = '☹️';
+            }
+
+            // Update grade and emoji
+            $('#grade').text(grade);
+            $('#grade-emoji').text(emoji);
 
             const lessonId = quizData.lesson_id;    // assuming you include lesson_id in `quizData`
             const quizId = quizData.quiz_id;
@@ -559,7 +593,6 @@
                     answers: userAnswers,
                     score: correctAnswers,
                     total: totalQuestions,
-                    is_completed: 1
                 },
                 success: function(response) {
                     console.log('Results saved', response);
