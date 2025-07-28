@@ -85,7 +85,7 @@
                             <select id="quiz-lesson" class="select select-bordered join-item w-full" required>
                                 <option value="" disabled selected>Select a lesson</option>
                                 @foreach($lessons as $lesson)
-                                    <option value="{{ $lesson->id }}" {{ old('lesson_id', $selectedLessonId ?? '') == $lesson->id ? 'selected' : '' }}>
+                                    <option value="{{ $lesson->id }}" {{ $lesson->id ? 'selected' : '' }}>
                                         Level {{ $lesson->required_level }} - {{ $lesson->title }}
                                     </option>
                                 @endforeach
@@ -583,7 +583,7 @@
 
         function addNote(existingId = null, noteText = '', mediaPath = null) {
             const nextNumber = notes.length + 1;
-            const noteId = existingId || `note-${Date.now()}`;
+            const noteId = existingId ? `note-${existingId}` : `note-${Date.now()}`;
             
             const noteHtml = `
                 <div class="note-card card bg-base-200 shadow-lg" id="${noteId}" data-sequence="${nextNumber}" ${existingId ? `data-existing-id="${existingId}"` : ''}>
@@ -644,7 +644,7 @@
 
         function addQuestion(existingId = null, questionText = '', mediaPath = null, choices = []) {
             const nextNumber = questions.length + 1;
-            const questionId = existingId || `question-${Date.now()}`;
+            const questionId = existingId ? `question-${existingId}` : `question-${Date.now()}`;
             const choicesType = $('#quiz-choices-type').val();
 
             const questionHtml = `
@@ -1098,7 +1098,7 @@
 
                         if (choicesType === 'media') {
                             const fileInput = $choiceItem.find('input[type="file"]')[0];
-                            const hasExistingMedia = $choiceItem.find('.indicator .preview-badge:not(.hidden)').length > 0;
+                            const hasExistingMedia = $choiceItem.find('img, video').length > 0;
 
                             if (!fileInput?.files[0] && !hasExistingMedia) {
                                 console.warn(`❌ Question ${index + 1} choice media missing`);
