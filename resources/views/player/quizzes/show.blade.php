@@ -163,6 +163,10 @@
                                 <div class="stat-title">Incorrect</div>
                                 <div class="stat-value text-error" id="incorrect-answers">0</div>
                             </div>
+                            <div class="stat">
+                                <div class="stat-title">Time Taken</div>
+                                <div class="stat-value text-info" id="time-taken">0s</div>
+                            </div>
                         </div>
                         <div class="card-actions justify-center">
                             <button id="restart-btn" class="btn btn-primary">Restart Quiz</button>
@@ -183,6 +187,7 @@
         let currentQuestionIndex = 0;
         let userAnswers = {};
         let isReviewMode = false;
+        let quizStartTime = null;
 
         // Initialize quiz
         loadQuiz();
@@ -327,6 +332,8 @@
 
 
         function displayQuestion() {
+            quizStartTime = Date.now();
+
             if (!quizData || !quizData.questions) return;
 
             const question = quizData.questions[currentQuestionIndex];
@@ -524,6 +531,8 @@
             // Calculate results
             let correctAnswers = 0;
             const totalQuestions = quizData.questions.length;
+            const quizEndTime = Date.now();
+            const durationSeconds = Math.floor((quizEndTime - quizStartTime) / 1000);
 
             quizData.questions.forEach(question => {
                 const userAnswer = userAnswers[question.question_id];
@@ -548,6 +557,7 @@
             $('#total-questions').text(totalQuestions);
             $('#correct-answers').text(correctAnswers);
             $('#incorrect-answers').text(totalQuestions - correctAnswers);
+            $('#time-taken').text(`${durationSeconds}s`);
 
             // Determine grade and emoji
             let grade;
@@ -576,7 +586,8 @@
                 quizId,
                 userAnswers,
                 correctAnswers,
-                totalQuestions
+                totalQuestions,
+                durationSeconds
             });
 
             $.ajax({
@@ -593,6 +604,7 @@
                     answers: userAnswers,
                     score: correctAnswers,
                     total: totalQuestions,
+                    duration_seconds: durationSeconds
                 },
                 success: function(response) {
                     console.log('Results saved', response);

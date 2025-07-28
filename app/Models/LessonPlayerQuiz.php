@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class LessonPlayerQuiz extends Model
 {
     protected $fillable = [
-        'player_id', 'lesson_id', 'quiz_id', 'is_completed', 'answers_json'
+        'player_id', 'lesson_id', 'quiz_id', 'is_completed', 'answers_json', 'duration_seconds'
     ];
 
     protected $casts = [

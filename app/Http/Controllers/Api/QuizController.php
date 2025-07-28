@@ -133,6 +133,7 @@ class QuizController extends Controller
             'lesson_id' => 'required|exists:lessons,id',
             'quiz_id' => 'required|exists:quizzes,id',
             'answers' => 'required|array', // question_id => choice_id
+            'duration_seconds' => 'nullable|integer'
         ]);
 
         // Check if all answers are correct
@@ -157,7 +158,8 @@ class QuizController extends Controller
             ],
             [
                 'is_completed' => $allCorrect, // only mark as completed if all correct
-                'answers_json' => $validated['answers'],
+                'answers_json' => $validated['answers'], // answer stored as {key: value} where key is question_id and value is choice_id
+                'duration_seconds' => $validated['duration_seconds'] ?? null,
             ]
         );
 
