@@ -19,6 +19,10 @@
         .card-hover:hover {
             transform: translateY(-5px);
         }
+        .card.hidden-card {
+            display: none !important;
+        }
+
     </style>
 
     <x-slot name="header">
@@ -46,11 +50,36 @@
         </div>
     </x-slot>
 
-    <div class="py-6">
+    <div class="py-6" id="regularSections">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <!-- Beginner Quizzes Section -->
-
             @foreach($lessons as $lesson)
+                @if($lesson->quizzes->isNotEmpty())
+                    <div class="mb-8 lesson-section" data-lesson-id="{{ $lesson->id }}">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold flex items-center gap-2">
+                                Level {{ $lesson->required_level }} &bull; {{ $lesson->title }}
+                            </h3>
+                            <button class="btn btn-ghost btn-sm view-all-btn" data-lesson-id="{{ $lesson->id }}">
+                                <span class="btn-text">View All</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 expand-icon" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                </svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 collapse-icon hidden" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="cards-container" data-lesson-id="{{ $lesson->id }}">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                                {{-- Display Quizzes --}}
+                                @php $cardIndex = 0; @endphp
+                                @forelse($lesson->quizzes as $quiz)
+                                    <div class="card card-border border-base-300 bg-base-100 dark:bg-base-200 w-full shadow-lg quiz-card {{ $cardIndex >= 5 ? 'hidden-card' : '' }}" data-lesson-id="{{ $lesson->id }}" data-card-index="{{ $cardIndex }}"data-type="quiz" data-searchable-string="{{ strtolower($quiz->title . ' ' . $quiz->description) }}">
+                                        <div class="card-body">
+                                            <h2 class="card-title truncate">{{ $quiz->title }}</h2>
+                                            <p class="mb-2 truncate">{{ $quiz->description }}</p>
                                             @if(auth()->user()->player->level < $lesson->required_level)
                                                     <div class="badge badge-error badge-sm mb-2">Locked</div>
                                             @endif
@@ -81,6 +110,27 @@
                                                             <path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393"/>
                                                         </svg>
                                                     @endforelse
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @php $cardIndex++; @endphp
+                                @empty
+                                @endforelse
+
+                                {{-- Show "Coming Soon" if no content --}}
+                                {{-- @if($lesson->quizzes->isEmpty() && $lesson->notes->isEmpty())
+                                    <div class="card card-border bg-base-200 dark:bg-base-300 w-full shadow-lg col-span-full">
+                                        <div class="card-body items-center text-center">
+                                            <h2 class="card-title">Coming Soon!</h2>
+                                            <p class="mb-2">Thanks for your patience!</p>
+                                        </div>
+                                    </div>
+                                @endif --}}
+                            </div>
+                        </div>
+                    </div>
+                @endif
             @endforeach
         </div>
     </div>
@@ -174,5 +224,44 @@
                 }, 300); // Debounce delay
             });
         });
+
+        $(function () {
+            // Initialize view all buttons
+            $('.lesson-section').each(function () {
+                const totalCards = $(this).find('.quiz-card').length;
+                if (totalCards <= 5) {
+                    $(this).find('.view-all-btn').hide();
+                }
+            });
+
+            // View all / collapse functionality
+            $('.view-all-btn').click(function () {
+                const lessonId = $(this).data('lesson-id');
+                const lesson = $(`.lesson-section[data-lesson-id="${lessonId}"]`);
+                const cards = lesson.find('.quiz-card');
+                const hidden = cards.filter('.hidden-card');
+                const textEl = $(this).find('.btn-text');
+                const expandIcon = $(this).find('.expand-icon');
+                const collapseIcon = $(this).find('.collapse-icon');
+
+                if (hidden.length) {
+                    hidden.removeClass('hidden-card').show();
+                    textEl.text('Collapse');
+                    expandIcon.addClass('hidden');
+                    collapseIcon.removeClass('hidden');
+                } else {
+                    // First show all cards of current type
+                    cards.removeClass('hidden-card').show();
+                    
+                    // Then hide cards beyond index 4 (showing 5 cards)
+                    cards.each(function (i) {
+                        if (i >= 5) $(this).addClass('hidden-card').hide();
+                    });
+                    textEl.text('View All');
+                    expandIcon.removeClass('hidden');
+                    collapseIcon.addClass('hidden');
+                }
+            });
+        })
     </script>
 </x-app-layout>
