@@ -13,10 +13,7 @@ use App\Models\Quiz;
 use Illuminate\Http\Request;
 
 class QuizController extends Controller
-
-
 {
-
     /**
      * Get a list of lessons.
      */
@@ -171,32 +168,34 @@ class QuizController extends Controller
             'submitted_at' => now(),
         ]);
 
-        // Check if all quizzes for the lesson are completed AND correct
-        $lesson = Lesson::findOrFail($validated['lesson_id']);
-        $totalQuizzes = $lesson->quizzes()->count();
+        //////// unused lesson progress logic where level is increased if all quizzes are completed (answered correctly in full)
 
-        $completedQuizzes = LessonPlayerQuiz::where('player_id', $player->id)
-            ->where('lesson_id', $lesson->id)
-            ->where('is_completed', true) // only count fully correct quizzes
-            ->distinct('quiz_id')
-            ->count('quiz_id');
+        // // Check if all quizzes for the lesson are completed AND correct
+        // $lesson = Lesson::findOrFail($validated['lesson_id']);
+        // $totalQuizzes = $lesson->quizzes()->count();
 
-        // If all quizzes completed correctly, mark lesson as completed
-        if ($completedQuizzes >= $totalQuizzes) {
-            PlayerLessonProgress::updateOrCreate(         /// PlayerLessonProgress model refers to general lesson progress; if all quizzes are completed, is_completed is set to true
-                [
-                    'player_id' => $player->id,
-                    'lesson_id' => $lesson->id,
-                ],
-                [
-                    'is_completed' => true,
-                    'completed_at' => now(),
-                ]
-            );
+        // $completedQuizzes = LessonPlayerQuiz::where('player_id', $player->id)
+        //     ->where('lesson_id', $lesson->id)
+        //     ->where('is_completed', true) // only count fully correct quizzes
+        //     ->distinct('quiz_id')
+        //     ->count('quiz_id');
 
-            // Increase level (only now)
-            $player->increment('level');
-        }
+        // // If all quizzes completed correctly, mark lesson as completed
+        // if ($completedQuizzes >= $totalQuizzes) {
+        //     PlayerLessonProgress::updateOrCreate(         /// PlayerLessonProgress model refers to general lesson progress; if all quizzes are completed, is_completed is set to true
+        //         [
+        //             'player_id' => $player->id,
+        //             'lesson_id' => $lesson->id,
+        //         ],
+        //         [
+        //             'is_completed' => true,
+        //             'completed_at' => now(),
+        //         ]
+        //     );
+
+        //     // Increase level (only now)
+        //     $player->increment('level');
+        // }
 
         return response()->json(['status' => 'success']);
     }

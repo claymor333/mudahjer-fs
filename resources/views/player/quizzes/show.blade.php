@@ -613,6 +613,30 @@
                     console.error('Failed to save results', xhr.responseJSON);
                 }
             });
+
+            // Calculate exp gained
+            const expGained = correctAnswers * 10;
+
+            // Submit EXP after results are saved
+            $.ajax({
+                url: `/api/player/exp`,
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': token
+                },
+                data: {
+                    lesson_id: lessonId,
+                    exp: expGained
+                },
+                success: function(response) {
+                    console.log('EXP added', response);
+                },
+                error: function(xhr) {
+                    console.error('Failed to add EXP', xhr.responseJSON);
+                }
+            });
         }
 
         function showError(message) {
