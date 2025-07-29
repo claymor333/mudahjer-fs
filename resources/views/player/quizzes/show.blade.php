@@ -167,6 +167,10 @@
                                 <div class="stat-title">Time Taken</div>
                                 <div class="stat-value text-info" id="time-taken">0s</div>
                             </div>
+                            <div class="stat">
+                                <div class="stat-title">EXP Gained</div>
+                                <div class="stat-value text-accent" id="exp-gained">0</div>
+                            </div>
                         </div>
                         <div class="card-actions justify-center">
                             <button id="restart-btn" class="btn btn-primary">Restart Quiz</button>
@@ -616,6 +620,9 @@
 
             // Calculate exp gained
             const expGained = correctAnswers * 10;
+            
+            // Update EXP gained display
+            $('#exp-gained').text(expGained);
 
             // Submit EXP after results are saved
             $.ajax({
