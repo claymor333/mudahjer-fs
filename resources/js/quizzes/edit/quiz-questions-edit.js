@@ -7,6 +7,7 @@
 // 	function funcName (params) {
 
 window.addQuestion = addQuestion;
+window.renderMediaPreview = renderMediaPreview;
 window.renderChoices = renderChoices;
 window.renderChoiceInput = renderChoiceInput;
 window.updateQuestionsForChoicesType = updateQuestionsForChoicesType;
@@ -20,56 +21,104 @@ window.nextQuestion = nextQuestion;
 window.updateQuestionCounter = updateQuestionCounter;
 window.updateQuestionSequences = updateQuestionSequences;
 window.removeQuestion = removeQuestion;
+// onchange event for #quiz-choices-type
 
+$(document).on('change', '#quiz-choices-type', function () {
+	const newType = $(this).val();
+
+	if (!window.confirm('Changing the choices type will reset all existing choices.\n\nText and media in all questions will be deleted.\n\nAre you sure you want to continue?')) {
+		// Restore the previous value
+		this.value = this.dataset.previousValue || 'text';
+		return;
+	}
+
+	updateQuestionsForChoicesType(newType);
+	this.dataset.previousValue = newType;
+});
 
 function addQuestion(existingId = null, questionText = '', mediaPath = null, choices = []) {
 	const nextNumber = questions.length + 1;
 	const questionId = existingId ? `question-${existingId}` : `question-${Date.now()}`;
 	const choicesType = $('#quiz-choices-type').val();
 
+	let choiceInputHtml;
+	if (choicesType === 'media') {
+		choiceInputHtml = `
+			<div class="indicator w-full relative">
+				<span class="indicator-item choice-media choice-preview-img !p-0 badge badge-secondary w-8 h-8 overflow-hidden hidden">
+					<img src="" alt="preview" class="w-full h-full object-cover cursor-pointer" onclick="showPreviewModal(this)">
+				</span>
+				<span class="indicator-item choice-media choice-preview-video !p-0 badge badge-secondary w-8 h-8 flex items-center justify-center hidden cursor-pointer">
+					<svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20" onclick="showPreviewModal(this)">
+						<path d="M4.5 3.5a1 1 0 011.6-.8l10 7a1 1 0 010 1.6l-10 7A1 1 0 014.5 17V3.5z" />
+					</svg>
+				</span>
+				<input type="file" 
+					class="file-input file-input-bordered flex-1 validator choice-media-input" 
+					accept="image/*,video/*" 
+					onchange="handleChoiceMediaPreview(this)" 
+					required>
+			</div>`;
+	} else {
+		choiceInputHtml = `<input type="text" class="input input-bordered flex-1 validator" placeholder="Choice text" required>`;
+	}
+
+	let questionHeaderHtml;
+	if (choicesType === 'media') {
+		questionHeaderHtml = `
+			<fieldset class="fieldset">
+				<legend class="fieldset-legend"><span class="font-medium text-lg">Question Text</span></legend>
+				<input type="text" id="question-text-${questionId}" class="w-full input input-bordered validator"
+					placeholder="Enter question text..." value="${questionText || ''}">
+				<p id="question-text-val-${questionId}" class="hidden text-error text-xs mt-1">Question text is required.</p>
+			</fieldset>`;
+	} else {
+		questionHeaderHtml = `
+			<fieldset class="fieldset">
+				<legend class="fieldset-legend"><span class="font-medium text-lg">Media</span></legend>
+				<input type="file" id="question-media-${questionId}" class="w-full file-input file-input-bordered"
+					accept="image/*,video/*" onchange="previewMedia(this, '${questionId}')">
+				<p id="question-media-val-${questionId}" class="hidden text-error text-xs mt-1">Question media is required.</p>
+				<div class="media-preview mt-4 ${mediaPath ? '' : 'hidden'}" id="media-preview-${questionId}">
+					${mediaPath ? renderMediaPreview(mediaPath, questionId) : ''}
+				</div>
+			</fieldset>`;
+	}
+
 	const questionHtml = `
-            <div class="question-card card bg-base-200 shadow-lg" id="${questionId}" data-sequence="${nextNumber}" ${existingId ? `data-existing-id="${existingId}"` : ''}>
-                <div class="card-body">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-xl font-bold">Question ${nextNumber}</h3>
-                        <button type="button" class="btn btn-sm btn-circle btn-ghost" onclick="removeQuestion('${questionId}')">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                        </button>
-                    </div>
+		<div class="question-card card dark:bg-base-200 border border-base-300 shadow-xl" id="${questionId}" data-sequence="${nextNumber}" ${existingId ? `data-existing-id="${existingId}"` : ''}>
+			<div class="card-body">
+				<div class="flex justify-between items-center mb-4">
+					<h3 class="text-xl font-bold">Question ${nextNumber}</h3>
+					<button type="button" class="btn btn-sm btn-circle btn-ghost" onclick="removeQuestion('${questionId}')">
+						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+						</svg>
+					</button>
+				</div>
 
-                    <fieldset class="fieldset">
-                        <legend class="fieldset-legend">Question Text</legend>
-                        <input type="text" id="question-text-${questionId}" class="w-full input input-bordered validator"
-                            placeholder="Enter question text..." value="${questionText || ''}" required>
-                        <p id="question-text-val-${questionId}" class="hidden text-error text-xs mt-1">Question text is required.</p>
+				<div class="question-header-container" id="question-header-${questionId}">
+					${questionHeaderHtml}
+				</div>
 
-                        <legend class="fieldset-legend mt-4">Media (Optional)</legend>
-                        <input type="file" id="question-media-${questionId}" class="w-full file-input file-input-bordered"
-                            accept="image/*,video/*" onchange="previewMedia(this, '${questionId}')">
-                        <div class="media-preview mt-2" id="media-preview-${questionId}">
-                            ${mediaPath ? renderMediaPreview(mediaPath, questionId) : ''}
-                        </div>
+				<fieldset class="fieldset">
+					<legend class="fieldset-legend"><span class="font-medium text-lg">Answer Choices</span></legend>
+					<p id="choice-radio-val-${questionId}" class="text-error hidden text-xs mb-2">
+						Select a correct answer.
+					</p>
+					<div class="choices-container space-y-3" id="choices-${questionId}">
+						${renderChoices(choices, choicesType, questionId, nextNumber - 1)}
+					</div>
 
-                        <legend class="fieldset-legend mt-4">Answer Choices</legend>
-                        <p id="choice-radio-val-${questionId}" class="text-error hidden text-xs mb-2">
-                            Select a correct answer.
-                        </p>
-                        <div class="choices-container space-y-3" id="choices-${questionId}">
-                            ${renderChoices(choices, choicesType, questionId, nextNumber - 1)}
-                        </div>
-
-                        <button type="button" class="btn btn-sm btn-outline btn-primary mt-3" onclick="addChoice('${questionId}', '${choicesType}')">
-                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                            </svg>
-                            Add Choice
-                        </button>
-                    </fieldset>
-                </div>
-            </div>
-            `;
+					<button type="button" class="btn btn-sm btn-outline btn-primary mt-3" onclick="addChoice('${questionId}', '${choicesType}')">
+						<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+						</svg>
+						Add Choice
+					</button>
+				</fieldset>
+			</div>
+		</div>`;
 
 	$('#questions-carousel').append(questionHtml);
 	questions.push(questionId);
@@ -81,6 +130,31 @@ function addQuestion(existingId = null, questionText = '', mediaPath = null, cho
 	}
 
 	return questionId;
+}
+
+/**
+ * Render media preview HTML
+ * @param {string} path
+ * @param {string} questionId
+ * @returns {string}
+ */
+function renderMediaPreview(path, questionId) {
+	const isImage = path.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+	const src = `/storage/${path}`;
+	return `
+            <div class="media-preview relative">
+                ${isImage
+			? `<img src="${src}" data-media-src="${src}" data-media-type="image" class="w-full max-w-md h-48 object-cover rounded-lg mx-auto block" onclick="showPreviewModal(this)">`
+			: `<video controls class="w-full max-w-md h-48 object-cover rounded-lg mx-auto block" onclick="showPreviewModal(this)">
+                        <source src="${src}" type="video/mp4">
+                    </video>`}
+                <button type="button" class="btn btn-sm btn-circle btn-error absolute top-2 right-2" onclick="removeMedia('${questionId}')">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+                <input type="hidden" name="questions[][existing_media]" value="${path}">
+            </div>`;
 }
 
 /**
@@ -108,7 +182,7 @@ function renderChoices(choices, choicesType, questionId, questionIndex) {
 			: choice.choice_text || '';
 
 		return `
-                <div class="choice-item flex-col p-3 bg-base-100 rounded-lg" ${choice.id ? `data-choice-id="${choice.id}"` : ''}>
+                <div class="choice-item flex-col p-3 bg-base-100 border border-base-300 rounded-lg shadow-lg" ${choice.id ? `data-choice-id="${choice.id}"` : ''}>
                     <div class="flex items-center gap-3">
                         <input type="radio" name="questions[${questionIndex}][correct_choice]" class="radio radio-primary" value="${index}" ${isChecked}>
                         ${renderChoiceInput(value, choicesType)}
@@ -178,24 +252,77 @@ function renderChoiceInput(value, type) {
             <input type="text" class="input input-bordered flex-1 validator" placeholder="Choice text" value="${value || ''}" required>`;
 }
 
-/**
- * Update all questions when choices_type changes
- * @param {string} newType
- */
 function updateQuestionsForChoicesType(newType) {
-	questions.forEach((questionId, index) => {
+	questions.forEach(questionId => {
 		const $questionCard = $(`#${questionId}`);
 
+		// Preserve question text & media
+		const prevQuestionText = $questionCard.find(`#question-text-${questionId}`).val();
+		const prevMediaFile = $questionCard.find(`#question-media-${questionId}`)[0]?.files?.[0] ?? null;
+
+		// Replace header based on type
+		const $questionHeaderContainer = $questionCard.find(`#question-header-${questionId}`);
+		$questionHeaderContainer.empty();
+
+		if (newType === 'media') {
+			$questionHeaderContainer.append(`
+                <legend class="fieldset-legend"><span class="font-medium text-lg">Question Text</span></legend>
+                <input type="text" id="question-text-${questionId}" class="w-full input input-bordered validator" placeholder="Enter question text..." value="${prevQuestionText || ''}">
+                <p id="question-text-val-${questionId}" class="hidden text-error text-xs mt-1">Question text is required.</p>
+            `);
+		} else {
+			$questionHeaderContainer.append(`
+                <legend class="fieldset-legend"><span class="font-medium text-lg">Media</span></legend>
+                <input type="file" id="question-media-${questionId}" class="w-full file-input file-input-bordered"
+                    accept="image/*,video/*" onchange="previewMedia(this, '${questionId}')">
+                <p id="question-media-val-${questionId}" class="hidden text-error text-xs mt-1">Question media is required.</p>
+                <div class="media-preview mt-4 hidden" id="media-preview-${questionId}"></div>
+            `);
+
+			// Optional: If you want to re-assign the media file, you'll need to handle this via `DataTransfer` or file inputs re-selection (limited by browser)
+		}
+
+		// Choice input template
+		let choiceInputHtml = newType === 'media' ? `
+            <div class="indicator w-full relative">
+                <span class="indicator-item choice-media choice-preview-img !p-0 badge badge-secondary w-8 h-8 overflow-hidden hidden">
+                    <img src="" alt="preview" class="w-full h-full object-cover cursor-pointer" onclick="showPreviewModal(this)">
+                </span>
+                <span class="indicator-item choice-media choice-preview-video !p-0 badge badge-secondary w-8 h-8 flex items-center justify-center hidden cursor-pointer">
+                    <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20" onclick="showPreviewModal(this)">
+                        <path d="M4.5 3.5a1 1 0 011.6-.8l10 7a1 1 0 010 1.6l-10 7A1 1 0 014.5 17V3.5z" />
+                    </svg>
+                </span>
+                <input type="file" 
+                    class="file-input file-input-bordered flex-1 validator choice-media-input" 
+                    accept="image/*,video/*" 
+                    onchange="handleChoiceMediaPreview(this)" 
+                    required>
+            </div>
+        ` : `
+            <input type="text" class="input input-bordered flex-1 validator" placeholder="Choice text" required>
+        `;
+
+		// Replace choices
 		const $choicesContainer = $questionCard.find(`#choices-${questionId}`);
 		$choicesContainer.empty();
 
-		const defaultChoices = [
-			{ id: null, choice_text: '', is_correct: false },
-			{ id: null, choice_text: '', is_correct: false }
-		];
-
-		const newChoicesHtml = renderChoices(defaultChoices, newType, questionId, index);
-		$choicesContainer.html(newChoicesHtml);
+		for (let i = 0; i < 2; i++) {
+			$choicesContainer.append(`
+                <div class="choice-item flex-col p-3 bg-base-100 border border-base-300 rounded-lg shadow-lg">
+                    <div class="flex items-center gap-3">
+                        <input type="radio" name="correct-${questionId}" class="radio radio-primary" value="${i}">
+                        ${choiceInputHtml}
+                        <button type="button" class="btn btn-sm btn-circle btn-ghost opacity-50" onclick="removeChoice(this)">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <p class="choice-validator-input text-error hidden text-xs mt-1"></p>
+                </div>
+            `);
+		}
 	});
 }
 
@@ -208,16 +335,18 @@ function addChoice(questionId, choiceType) {
 	const choiceInput = renderChoiceInput('', choiceType);
 
 	const choiceHtml = `
-                <div class="choice-item flex items-center gap-3 p-3 bg-base-100 rounded-lg">
-                    <input type="hidden" name="questions[${questionIndex}][choices][${choiceCount}][id]" value="">
-                    <input type="radio" name="questions[${questionIndex}][correct_choice]" class="radio radio-primary" value="${choiceCount}">
-                    <div class="flex-1">${choiceInput}</div>
-                    <button type="button" class="btn btn-sm btn-circle btn-ghost" onclick="removeChoice(this)">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
+                <div class="choice-item flex-col p-3 bg-base-100 border border-base-300 rounded-lg shadow-lg">
+					<div class="flex items-center gap-3">
+						<input type="hidden" name="questions[${questionIndex}][choices][${choiceCount}][id]" value="">
+						<input type="radio" name="questions[${questionIndex}][correct_choice]" class="radio radio-primary" value="${choiceCount}">
+						${choiceInput}
+						<button type="button" class="btn btn-sm btn-circle btn-ghost" onclick="removeChoice(this)">
+							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+							</svg>
+						</button>
+					</div>
+				</div>
             `;
 
 	const $newChoice = $(choiceHtml);
