@@ -10,154 +10,191 @@ window.validateStep = validateStep;
 
 function validateStep(step) {
 	let isValid = true;
-	console.log(`🚀 Validating Step ${step}`);
+	let firstInvalidElement = null;
+	let firstErrorIndex = null;
+	let errorType = null;
+	const choicesType = $('#quiz-choices-type').val();
 
 	if (step === 1) {
-		console.log('📋 Step 1: Quiz basic info');
-
 		const title = $('#quiz-title').val().trim();
 		if (!title) {
-			console.warn('❌ Title is empty');
 			$('#quiz-title').addClass('input-error');
 			$('#quiz-title-val').removeClass('hidden');
+			if (!firstInvalidElement) firstInvalidElement = $('#quiz-title')[0];
 			isValid = false;
 		} else {
-			console.log('✅ Title OK');
 			$('#quiz-title').removeClass('input-error');
 			$('#quiz-title-val').addClass('hidden');
 		}
 
 		const description = $('#quiz-description').val().trim();
 		if (!description) {
-			console.warn('❌ Description is empty');
 			$('#quiz-description').addClass('input-error');
 			$('#quiz-description-val').removeClass('hidden');
+			if (!firstInvalidElement) firstInvalidElement = $('#quiz-description')[0];
 			isValid = false;
 		} else {
-			console.log('✅ Description OK');
 			$('#quiz-description').removeClass('input-error');
 			$('#quiz-description-val').addClass('hidden');
 		}
 
 		const lessonVal = $('#quiz-lesson').val();
 		if (!lessonVal) {
-			console.warn('❌ Lesson not selected');
 			$('#quiz-lesson').addClass('input-error');
 			$('#quiz-lesson-val').removeClass('hidden');
+			if (!firstInvalidElement) firstInvalidElement = $('#quiz-lesson')[0];
 			isValid = false;
 		} else {
-			console.log('✅ Lesson OK');
 			$('#quiz-lesson').removeClass('input-error');
 			$('#quiz-lesson-val').addClass('hidden');
 		}
 
 	} else if (step === 2) {
-		console.log('📋 Step 2: Notes');
-		notes.forEach((noteId) => {
-			const noteText = $(`#note-text-${noteId}`).val().trim();
-			const noteMediaInput = $(`#note-media-${noteId}`)[0].files[0];
-			const hasMediaPreview = $(`#media-preview-${noteId}`).find('img, video').length > 0;
+		notes.forEach((noteId, index) => {
+			const noteTextInput = $(`#note-text-${noteId}`);
+			const noteMediaInput = $(`#note-media-${noteId}`);
+			const noteText = noteTextInput.val().trim();
+			const mediaFile = noteMediaInput[0]?.files[0];
+			const hasPreview = $(`#media-preview-${noteId}`).find('img, video').length > 0;
 
 			if (!noteText) {
-				console.warn(`❌ Note ${noteId} text is empty`);
-				$(`#note-text-${noteId}`).addClass('input-error');
+				noteTextInput.addClass('input-error');
 				$(`#note-text-val-${noteId}`).removeClass('hidden');
+				if (!firstInvalidElement) {
+					firstInvalidElement = noteTextInput[0];
+					firstErrorIndex = index;
+					errorType = 'note';
+				}
 				isValid = false;
 			} else {
-				console.log(`✅ Note ${noteId} text OK`);
-				$(`#note-text-${noteId}`).removeClass('input-error');
+				noteTextInput.removeClass('input-error');
 				$(`#note-text-val-${noteId}`).addClass('hidden');
 			}
 
-			if (!noteMediaInput && !hasMediaPreview) {
-				console.warn(`❌ Note ${noteId} media missing`);
-				$(`#note-media-${noteId}`).addClass('input-error');
+			if (!mediaFile && !hasPreview) {
+				noteMediaInput.addClass('input-error');
 				$(`#note-media-val-${noteId}`).removeClass('hidden');
+				if (!firstInvalidElement) {
+					firstInvalidElement = noteMediaInput[0];
+					firstErrorIndex = index;
+					errorType = 'note';
+				}
 				isValid = false;
 			} else {
-				console.log(`✅ Note ${noteId} media OK`);
-				$(`#note-media-${noteId}`).removeClass('input-error');
+				noteMediaInput.removeClass('input-error');
 				$(`#note-media-val-${noteId}`).addClass('hidden');
 			}
 		});
 
 	} else if (step === 3) {
-		console.log('📋 Step 3: Questions');
-
 		questions.forEach((questionId, index) => {
-			const questionText = $(`#question-text-${questionId}`).val().trim();
-			const choicesType = $('#quiz-choices-type').val();
-			const $questionRadioValidator = $(`#choice-radio-val-${questionId}`);
+			
+			if (choicesType === 'media') {
+				const questionInput = $(`#question-text-${questionId}`);
+				const questionText = questionInput.val().trim();
 
-			let hasCorrectAnswer = $(`input[name="questions[${index}][correct_choice]"]:checked`).length > 0;
-			let hasEmptyChoice = false;
-
-			if (!questionText) {
-				console.warn(`❌ Question ${index + 1} text is empty`);
-				$(`#question-text-${questionId}`).addClass('input-error');
-				$(`#question-text-val-${questionId}`).removeClass('hidden');
-				isValid = false;
+				if (!questionText) {
+					questionInput.addClass('input-error');
+					$(`#question-text-val-${questionId}`).removeClass('hidden');
+					if (!firstInvalidElement) {
+						firstInvalidElement = questionInput[0];
+						firstErrorIndex = index;
+						errorType = 'question';
+					}
+					isValid = false;
+				} else {
+					questionInput.removeClass('input-error');
+					$(`#question-text-val-${questionId}`).addClass('hidden');
+				}
 			} else {
-				console.log(`✅ Question ${index + 1} text OK`);
-				$(`#question-text-${questionId}`).removeClass('input-error');
-				$(`#question-text-val-${questionId}`).addClass('hidden');
+				const questionMediaInput = $(`#question-media-${questionId}`);
+				const hasMediaPreview = $(`#media-preview-${questionId}`).find('img, video').length > 0;
+				const mediaFile = questionMediaInput[0]?.files[0];
+
+				if (!mediaFile && !hasMediaPreview) {
+					questionMediaInput.addClass('input-error');
+					$(`#question-media-val-${questionId}`).removeClass('hidden');
+					if (!firstInvalidElement) {
+						firstInvalidElement = questionMediaInput[0];
+						firstErrorIndex = index;
+						errorType = 'question';
+					}
+					isValid = false;
+				} else {
+					questionMediaInput.removeClass('input-error');
+					$(`#question-media-val-${questionId}`).addClass('hidden');
+				}
 			}
 
 			$(`#choices-${questionId} .choice-item`).each(function () {
 				const $choiceItem = $(this);
 				const $choiceValidatorInput = $choiceItem.find('.choice-validator-input');
-				const $radioInput = $choiceItem.find('input[type="radio"]');
 
-				if (choicesType === 'media') {
-					const fileInput = $choiceItem.find('input[type="file"]')[0];
-					const hasExistingMedia = $choiceItem.find('img, video').length > 0;
-
-					if (!fileInput?.files[0] && !hasExistingMedia) {
-						console.warn(`❌ Question ${index + 1} choice media missing`);
-						$choiceValidatorInput.text('Please select a file or keep the existing media.').removeClass('hidden');
-						$(fileInput).addClass('input-error');
-						hasEmptyChoice = true;
-					} else {
-						console.log(`✅ Question ${index + 1} choice media OK`);
-						$choiceValidatorInput.addClass('hidden');
-						$(fileInput).removeClass('input-error');
-					}
-				} else {
-					const textInput = $choiceItem.find('input[type="text"]');
-					if (!textInput.val().trim()) {
-						console.warn(`❌ Question ${index + 1} choice text is empty`);
-						textInput.addClass('input-error');
+				if (choicesType === 'text') {
+					const $textInput = $choiceItem.find('input[type="text"]');
+					const value = $textInput.val().trim();
+					if (!value) {
+						$textInput.addClass('input-error');
 						$choiceValidatorInput.text('This choice cannot be empty.').removeClass('hidden');
-						hasEmptyChoice = true;
+						isValid = false;
+
+						if (!firstInvalidElement) {
+							firstInvalidElement = $textInput[0];
+							firstErrorIndex = index;
+							errorType = 'question';
+						}
 					} else {
-						console.log(`✅ Question ${index + 1} choice text OK`);
-						textInput.removeClass('input-error');
+						$textInput.removeClass('input-error');
 						$choiceValidatorInput.addClass('hidden');
 					}
-				}
+				} else if (choicesType === 'media') {
+					const fileInput = $choiceItem.find('input[type="file"]')[0];
+					const $imgBadge = $choiceItem.find('.choice-preview-img:not(.hidden) img[data-media-src]');
+					const $videoBadge = $choiceItem.find('.choice-preview-video:not(.hidden)[data-media-src]');
 
-				if (!$radioInput.is(':checked')) {
-					$radioInput.addClass('input-error').removeClass('radio-primary');
-				} else {
-					$radioInput.removeClass('input-error').addClass('radio-primary');
+					const hasUploadedFile = !!fileInput?.files?.[0];
+					const hasExistingImage = $imgBadge.length > 0 && $imgBadge.attr('data-media-src')?.trim();
+					const hasExistingVideo = $videoBadge.length > 0 && $videoBadge.attr('data-media-src')?.trim();
+
+					const hasMedia = hasUploadedFile || hasExistingImage || hasExistingVideo;
+
+					if (!hasMedia) {
+						$(fileInput).addClass('input-error');
+						$choiceValidatorInput.text('Choice media is required.').removeClass('hidden');
+						isValid = false;
+
+						if (!firstInvalidElement) {
+							firstInvalidElement = fileInput;
+							firstErrorIndex = index;
+							errorType = 'question';
+						}
+					} else {
+						$(fileInput).removeClass('input-error');
+						$choiceValidatorInput.addClass('hidden');
+					}
 				}
 			});
 
-			if (!hasCorrectAnswer) {
-				console.warn(`❌ Question ${index + 1} has no correct answer selected`);
-				$questionRadioValidator.removeClass('hidden');
+			const selectedChoice = $(`#choices-${questionId} input[type="radio"]:checked`).val();
+			if (!selectedChoice) {
+				const errorEl = $(`#choice-radio-val-${questionId}`);
+				errorEl.removeClass('hidden');
+				if (!firstInvalidElement) {
+					firstInvalidElement = errorEl[0];
+					firstErrorIndex = index;
+					errorType = 'question';
+				}
 				isValid = false;
 			} else {
-				console.log(`✅ Question ${index + 1} correct answer OK`);
-				$questionRadioValidator.addClass('hidden');
-			}
-
-			if (hasEmptyChoice) {
-				isValid = false;
+				$(`#choice-radio-val-${questionId}`).addClass('hidden');
 			}
 		});
 	}
 
-	console.log(`🎯 Step ${step} validation result: ${isValid ? '✅ Valid' : '❌ Invalid'}`);
-	return isValid;
+	return {
+		isValid,
+		firstInvalidElement,
+		firstErrorIndex,
+		errorType
+	};
 }
