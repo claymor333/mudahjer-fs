@@ -53,6 +53,8 @@ class QuizController extends Controller
         ]);
 
         try {
+            $choicesType = $validated['choices_type'];
+
             $quiz = Quiz::create([
                 'title' => $validated['title'],
                 'description' => $validated['description'],
@@ -83,8 +85,8 @@ class QuizController extends Controller
                 }
 
                 $question = $quiz->questions()->create([
-                    'question_text' => $questionData['question_text'],
-                    'media_path' => $mediaPath
+                    'question_text' => $choicesType === 'media' ? $questionData['question_text'] : null,
+                    'media_path' => $choicesType === 'text' ? $mediaPath : null
                 ]);
 
                 // Choices
