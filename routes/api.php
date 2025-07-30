@@ -31,6 +31,10 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::group(['middleware' => 'auth:sanctum'], function () {
+    // Player
+    // add exp
+    Route::post('/player/addexp',[PlayerController::class,'addExp']);
+
     // Get Lessons
     Route::get('/lessons/{user_id}', [QuizController::class, 'getLessons']);
     Route::get('/quizzes/{lesson_id}', [QuizController::class,'getQuizzes']);
