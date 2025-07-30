@@ -25,8 +25,8 @@ function renderMediaPreview(path, questionId) {
 	return `
 		<div class="media-preview relative">
 			${isImage
-			? `<img src="${src}" data-media-src="${src}" data-media-type="image" class="w-full max-w-md h-48 object-cover rounded-lg mx-auto block" onclick="showPreviewModal(this)">`
-			: `<video controls class="w-full max-w-md h-48 object-cover rounded-lg mx-auto block" onclick="showPreviewModal(this)">
+			? `<img src="${src}" data-media-src="${src}" data-media-type="image" class="w-full max-w-md max-h-[70vh] object-cover rounded-lg mx-auto block" onclick="showPreviewModal(this)">`
+			: `<video controls class="w-full max-w-md max-h-[70vh] object-cover rounded-lg mx-auto block" onclick="showPreviewModal(this)">
 					<source src="${src}" type="video/mp4">
 				</video>`}
 			<button type="button" class="btn btn-sm btn-circle btn-error absolute top-2 right-2" onclick="removeMedia('${questionId}')">

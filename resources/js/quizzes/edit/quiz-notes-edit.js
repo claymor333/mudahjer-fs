@@ -18,7 +18,7 @@ function addNote(existingId = null, noteText = '', mediaPath = null) {
 	const noteId = existingId ? `note-${existingId}` : `note-${Date.now()}`;
 
 	const noteHtml = `
-                <div class="note-card card bg-base-200 shadow-lg" id="${noteId}" data-sequence="${nextNumber}" ${existingId ? `data-existing-id="${existingId}"` : ''}>
+                <div class="note-card card border border-base-300 dark:bg-base-200 shadow-xl" id="${noteId}" data-sequence="${nextNumber}" ${existingId ? `data-existing-id="${existingId}"` : ''}>
                     <div class="card-body">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="text-xl font-bold">Note ${nextNumber}</h3>
@@ -47,8 +47,8 @@ function addNote(existingId = null, noteText = '', mediaPath = null) {
                                 ${mediaPath ? `
                                     <div class="media-preview relative">
                                         ${mediaPath.match(/\.(jpg|jpeg|png|gif|webp)$/i)
-				? `<img src="/storage/${mediaPath}" data-media-src="/storage/${mediaPath}" data-media-type="image" class="w-full max-w-md h-48 object-cover rounded-lg mx-auto block" onclick="showPreviewModal(this)">`
-				: `<video controls class="w-full max-w-md h-48 object-cover rounded-lg mx-auto block" onclick="showPreviewModal(this)">
+				? `<img src="/storage/${mediaPath}" data-media-src="/storage/${mediaPath}" data-media-type="image" class="w-full max-w-md max-h-[70vh] object-cover rounded-lg mx-auto block" onclick="showPreviewModal(this)">`
+				: `<video controls class="w-full max-w-md max-h-[70vh] object-cover rounded-lg mx-auto block" onclick="showPreviewModal(this)">
                                                 <source src="/storage/${mediaPath}" type="video/mp4">
                                             </video>`
 			}
