@@ -1,9 +1,14 @@
-/// regex: function\s+([a-zA-Z_$][\w$]*)\s*\(([^)]*)\)\s*[{]
-/// replace key: window.$1 = function($2) {
+/// regex: ^function\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\(
+/// replace key: 	window.$1 = $1;
+// 					function $1(
 
-/// "function funcName(params) {" to "window.funcName = function (params) {"
+/// function funcName (params) { to
+//  window.funcName = funcName 
+// 	function funcName (params) {
 
-window.validateStep = function (step) {
+window.validateStep = validateStep;
+
+function validateStep(step) {
 	let isValid = true;
 	console.log(`🚀 Validating Step ${step}`);
 

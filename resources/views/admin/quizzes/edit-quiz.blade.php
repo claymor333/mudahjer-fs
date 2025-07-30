@@ -5,7 +5,15 @@
         </h2>
     </x-slot>
 
-    @vite(['resources/css/quiz-wizard.css', 'resources/js/media-handling-edit.js', 'resources/js/quiz-questions-edit.js', 'resources/js/quiz-notes-edit.js', 'resources/js/quiz-edit-validator.js'])
+    @vite(
+        [
+            'resources/css/quiz-wizard.css', 
+            'resources/js/media-handling-edit.js', 
+            'resources/js/quizzes/edit/quiz-questions-edit.js', 
+            'resources/js/quizzes/edit/quiz-notes-edit.js', 
+            'resources/js/quizzes/edit/quiz-edit-validator.js'
+        ]
+    )
     <div class="py-4">
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
         <!-- Enhanced Stepper -->

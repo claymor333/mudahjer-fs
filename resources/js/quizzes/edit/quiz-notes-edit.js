@@ -1,9 +1,19 @@
-/// regex: function\s+([a-zA-Z_$][\w$]*)\s*\(([^)]*)\)\s*[{]
-/// replace key: window.$1 = function($2) {
+/// regex: ^function\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\(
+/// replace key: 	window.$1 = $1;
+// 					function $1(
 
-/// "function funcName(params) {" to "window.funcName = function (params) {"
+/// function funcName (params) { to
+//  window.funcName = funcName 
+// 	function funcName (params) {
 
-window.addNote = function (existingId = null, noteText = '', mediaPath = null) {
+window.addNote = addNote;
+window.navigateToNote = navigateToNote;
+window.prevNote = prevNote;
+window.nextNote = nextNote;
+window.updateNoteCounter = updateNoteCounter;
+window.removeNote = removeNote;
+
+function addNote(existingId = null, noteText = '', mediaPath = null) {
 	const nextNumber = notes.length + 1;
 	const noteId = existingId ? `note-${existingId}` : `note-${Date.now()}`;
 
@@ -64,7 +74,7 @@ window.addNote = function (existingId = null, noteText = '', mediaPath = null) {
 	updateNavigationButtons();
 }
 
-window.navigateToNote = function (index) {
+function navigateToNote(index) {
 	if (index < 0 || index >= notes.length) return;
 
 	currentNoteIndex = index;
@@ -83,7 +93,7 @@ window.navigateToNote = function (index) {
 	});
 }
 
-window.prevNote = function () {
+function prevNote() {
 	if (currentNoteIndex > 0) {
 		navigateToNote(currentNoteIndex - 1);
 		updateNoteCounter();
@@ -91,7 +101,7 @@ window.prevNote = function () {
 	}
 }
 
-window.nextNote = function () {
+function nextNote() {
 	if (currentNoteIndex < notes.length - 1) {
 		// normal: go to next note
 		navigateToNote(currentNoteIndex + 1);
@@ -103,12 +113,12 @@ window.nextNote = function () {
 	updateNavigationButtons();
 }
 
-window.updateNoteCounter = function () {
+function updateNoteCounter() {
 	$('#current-note-num').text(currentNoteIndex + 1);
 	$('#total-notes').text(notes.length);
 }
 
-window.removeNote = function (noteId) {
+function removeNote(noteId) {
 	const noteIndex = notes.indexOf(noteId);
 	if (noteIndex === -1) return;
 

@@ -1,9 +1,28 @@
-/// regex: function\s+([a-zA-Z_$][\w$]*)\s*\(([^)]*)\)\s*[{]
-/// replace key: window.$1 = function($2) {
+/// regex: ^function\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\(
+/// replace key: 	window.$1 = $1;
+// 					function $1(
 
-/// function funcName (params) { to window.funcName = function (params) {
+/// function funcName (params) { to
+//  window.funcName = funcName 
+// 	function funcName (params) {
 
-window.addQuestion = function (existingId = null, questionText = '', mediaPath = null, choices = []) {
+window.addQuestion = addQuestion;
+window.renderChoices = renderChoices;
+window.renderChoiceInput = renderChoiceInput;
+window.updateQuestionsForChoicesType = updateQuestionsForChoicesType;
+window.addChoice = addChoice;
+window.removeChoice = removeChoice;
+window.updateChoiceIndexes = updateChoiceIndexes;
+window.updateChoiceRemoveButtons = updateChoiceRemoveButtons;
+window.navigateToQuestion = navigateToQuestion;
+window.prevQuestion = prevQuestion;
+window.nextQuestion = nextQuestion;
+window.updateQuestionCounter = updateQuestionCounter;
+window.updateQuestionSequences = updateQuestionSequences;
+window.removeQuestion = removeQuestion;
+
+
+function addQuestion(existingId = null, questionText = '', mediaPath = null, choices = []) {
 	const nextNumber = questions.length + 1;
 	const questionId = existingId ? `question-${existingId}` : `question-${Date.now()}`;
 	const choicesType = $('#quiz-choices-type').val();
@@ -64,7 +83,6 @@ window.addQuestion = function (existingId = null, questionText = '', mediaPath =
 	return questionId;
 }
 
-
 /**
  * Render the choices HTML
  * @param {Array} choices
@@ -72,7 +90,7 @@ window.addQuestion = function (existingId = null, questionText = '', mediaPath =
  * @param {string} questionId
  * @returns {string}
  */
-window.renderChoices = function (choices, choicesType, questionId, questionIndex) {
+function renderChoices(choices, choicesType, questionId, questionIndex) {
 
 	console.log(choices, choicesType, questionId, questionIndex);
 	if (!choices || !choices.length) {
@@ -111,7 +129,7 @@ window.renderChoices = function (choices, choicesType, questionId, questionIndex
  * @param {string} type - text|media
  * @returns {string}
  */
-window.renderChoiceInput = function (value, type) {
+function renderChoiceInput(value, type) {
 	if (type === 'media') {
 		const hasMedia = value && value.trim() !== '';
 		const src = hasMedia ? `/storage/${value}` : '';
@@ -164,7 +182,7 @@ window.renderChoiceInput = function (value, type) {
  * Update all questions when choices_type changes
  * @param {string} newType
  */
-window.updateQuestionsForChoicesType = function (newType) {
+function updateQuestionsForChoicesType(newType) {
 	questions.forEach((questionId, index) => {
 		const $questionCard = $(`#${questionId}`);
 
@@ -181,7 +199,7 @@ window.updateQuestionsForChoicesType = function (newType) {
 	});
 }
 
-window.addChoice = function (questionId, choiceType) {
+function addChoice(questionId, choiceType) {
 	const questionCard = $(`#${questionId}`);
 	const questionIndex = parseInt(questionCard.data('sequence')) - 1;
 	const choicesContainer = $(`#choices-${questionId}`);
@@ -220,7 +238,7 @@ window.addChoice = function (questionId, choiceType) {
 	updateChoiceRemoveButtons(questionId);
 }
 
-window.removeChoice = function (button) {
+function removeChoice(button) {
 	const choiceItem = $(button).closest('.choice-item');
 	const questionCard = choiceItem.closest('.question-card');
 	const questionId = questionCard.attr('id');
@@ -245,7 +263,7 @@ window.removeChoice = function (button) {
 	});
 }
 
-window.updateChoiceIndexes = function (questionId) {
+function updateChoiceIndexes(questionId) {
 	const choicesContainer = $(`#choices-${questionId}`);
 	choicesContainer.children().each(function (index) {
 		$(this).find('input[type="radio"]').val(index);
@@ -253,7 +271,7 @@ window.updateChoiceIndexes = function (questionId) {
 	});
 }
 
-window.updateChoiceRemoveButtons = function (questionId) {
+function updateChoiceRemoveButtons(questionId) {
 	const choicesContainer = $(`#choices-${questionId}`);
 	const removeButtons = choicesContainer.find('button');
 
@@ -264,7 +282,7 @@ window.updateChoiceRemoveButtons = function (questionId) {
 	}
 }
 
-window.navigateToQuestion = function (index) {
+function navigateToQuestion(index) {
 	if (index < 0 || index >= questions.length) return;
 
 	currentQuestionIndex = index;
@@ -283,7 +301,7 @@ window.navigateToQuestion = function (index) {
 	});
 }
 
-window.prevQuestion = function () {
+function prevQuestion() {
 	if (currentQuestionIndex > 0) {
 		navigateToQuestion(currentQuestionIndex - 1);
 		updateQuestionCounter();
@@ -291,7 +309,7 @@ window.prevQuestion = function () {
 	}
 }
 
-window.nextQuestion = function () {
+function nextQuestion() {
 	if (currentQuestionIndex < questions.length - 1) {
 		// normal: go to next question
 		navigateToQuestion(currentQuestionIndex + 1);
@@ -303,12 +321,12 @@ window.nextQuestion = function () {
 	updateNavigationButtons();
 }
 
-window.updateQuestionCounter = function () {
+function updateQuestionCounter() {
 	$('#current-question-num').text(currentQuestionIndex + 1);
 	$('#total-questions').text(questions.length);
 }
 
-window.updateQuestionSequences = function () {
+function updateQuestionSequences() {
 	questions.forEach((qId, index) => {
 		const questionCard = $(`#${qId}`);
 		const newSequence = index + 1;
@@ -325,34 +343,34 @@ window.updateQuestionSequences = function () {
 	});
 }
 
-window.removeQuestion = function(questionId) {
-            const questionIndex = questions.indexOf(questionId);
-            if (questionIndex === -1) return;
-            
-            if (questions.length <= 1) {
-                alert('You must have at least one question!');
-                return;
-            }
+function removeQuestion(questionId) {
+	const questionIndex = questions.indexOf(questionId);
+	if (questionIndex === -1) return;
 
-            const questionCard = $(`#${questionId}`);
-            const existingId = questionCard.data('existing-id');
-            if (existingId) {
-                deletedQuestions.push(existingId);
-            }
+	if (questions.length <= 1) {
+		alert('You must have at least one question!');
+		return;
+	}
 
-            // Animate the removal
-            questionCard.fadeOut(300, function() {
-                $(this).remove();
-                questions.splice(questionIndex, 1);
-                
-                updateQuestionSequences();
-                
-                if (currentQuestionIndex >= questions.length) {
-                    currentQuestionIndex = questions.length - 1;
-                }
-                
-                navigateToQuestion(currentQuestionIndex);
-                updateQuestionCounter();
-                updateNavigationButtons();
-            });
-        }
+	const questionCard = $(`#${questionId}`);
+	const existingId = questionCard.data('existing-id');
+	if (existingId) {
+		deletedQuestions.push(existingId);
+	}
+
+	// Animate the removal
+	questionCard.fadeOut(300, function () {
+		$(this).remove();
+		questions.splice(questionIndex, 1);
+
+		updateQuestionSequences();
+
+		if (currentQuestionIndex >= questions.length) {
+			currentQuestionIndex = questions.length - 1;
+		}
+
+		navigateToQuestion(currentQuestionIndex);
+		updateQuestionCounter();
+		updateNavigationButtons();
+	});
+}
