@@ -658,9 +658,8 @@
                         </div>
 
                         <fieldset class="fieldset">
-                            <legend class="fieldset-legend"><span class="font-medium text-lg">Question Text</span></legend>
-                            <input type="text" id="question-text-${questionId}" class="w-full input input-bordered validator" placeholder="Enter question text..." required>
-                            <p id="question-text-val-${questionId}" class="hidden text-error text-xs mt-1">Question text is required.</p>
+                            <legend class="fieldset-legend"><span class="font-medium text-lg">Question Text (Optional)</span></legend>
+                            <input type="text" id="question-text-${questionId}" class="w-full input input-bordered validator" placeholder="Enter question text...">
 
                             <legend class="fieldset-legend mt-4"><span class="font-medium text-lg">Media (Optional)</span></legend>
                             <input type="file" id="question-media-${questionId}" class="w-full file-input file-input-bordered"
@@ -987,14 +986,15 @@
                     let hasEmptyChoice = false;
 
                     // Validate question text
-                    if (!questionText) {
-                        $(`#question-text-${questionId}`).addClass('input-error');
-                        $(`#question-text-val-${questionId}`).removeClass('hidden');
-                    isValid = false;
-                    } else {
-                        $(`#question-text-${questionId}`).removeClass('input-error');
-                        $(`#question-text-val-${questionId}`).addClass('hidden');
-                    }
+                    // <p id="question-text-val-${questionId}" class="hidden text-error text-xs mt-1">Question text is required.</p> --- commented out
+                    // if (!questionText) {
+                    //     $(`#question-text-${questionId}`).addClass('input-error');
+                    //     $(`#question-text-val-${questionId}`).removeClass('hidden');
+                    //     isValid = false;
+                    // } else {
+                    //     $(`#question-text-${questionId}`).removeClass('input-error');
+                    //     $(`#question-text-val-${questionId}`).addClass('hidden');
+                    // }
 
                     // Validate choices
                     $(`#choices-${questionId} .choice-item`).each(function () {

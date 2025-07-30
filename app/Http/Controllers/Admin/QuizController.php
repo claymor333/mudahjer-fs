@@ -47,7 +47,7 @@ class QuizController extends Controller
             'notes.*.media' => 'nullable|file|mimes:jpeg,png,jpg,webp,gif,mp4,webm|max:10240',
 
             'questions' => 'required|array|min:1',
-            'questions.*.question_text' => 'required|string',
+            'questions.*.question_text' => 'nullable|string',
             'questions.*.correct_choice' => 'required|numeric',
             'questions.*.media' => 'nullable|file|mimes:jpeg,png,jpg,webp,gif,mp4,webm|max:10240'
         ]);
