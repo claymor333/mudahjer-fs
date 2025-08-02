@@ -1,55 +1,97 @@
-<section class="space-y-6">
-    <header>
-        <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
+<!-- Delete Account Card -->
+<div class="card bg-base-100 shadow-xl card-border border-error">
+    <div class="card-body">
+        <h3 class="card-title text-lg mb-2 text-error">
             {{ __('Delete Account') }}
-        </h2>
+        </h3>
 
-        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            {{ __('Once your account is deleted, all of its resources and data will be permanently deleted. Before deleting your account, please download any data or information that you wish to retain.') }}
-        </p>
-    </header>
+        <div class="alert alert-error mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.996-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z"/>
+            </svg>
+            <div>
+                <h3 class="font-bold">{{ __('Warning: This action cannot be undone') }}</h3>
+                <div class="text-sm">
+                    {{ __('Once your account is deleted, all of its resources and data will be permanently deleted. Before deleting your account, please download any data or information that you wish to retain.') }}
+                </div>
+            </div>
+        </div>
 
-    <x-danger-button
-        x-data=""
-        x-on:click.prevent="$dispatch('open-modal', 'confirm-user-deletion')"
-    >{{ __('Delete Account') }}</x-danger-button>
+        <div class="card-actions justify-end">
 
-    <x-modal name="confirm-user-deletion" :show="$errors->userDeletion->isNotEmpty()" focusable>
-        <form method="post" action="{{ route('profile.destroy') }}" class="p-6">
+            <button class="btn btn-error w-fit" onclick="confirm_deletion_modal.showModal()">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+                {{ __('Delete Account') }}
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<dialog id="confirm_deletion_modal" class="modal">
+    <div class="modal-box w-11/12 max-w-lg">
+        <form method="post" action="{{ route('profile.destroy') }}">
             @csrf
             @method('delete')
 
-            <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
+            <h3 class="font-bold text-lg text-error mb-4">
                 {{ __('Are you sure you want to delete your account?') }}
-            </h2>
+            </h3>
 
-            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                {{ __('Once your account is deleted, all of its resources and data will be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.') }}
-            </p>
+            <div class="alert alert-warning mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.996-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z"/>
+                </svg>
+                <div class="text-sm">
+                    {{ __('Please enter your password to confirm you would like to permanently delete your account.') }}
+                </div>
+            </div>
 
-            <div class="mt-6">
-                <x-input-label for="password" value="{{ __('Password') }}" class="sr-only" />
-
-                <x-text-input
+            <div class="form-control w-full mb-6">
+                <label class="label sr-only" for="password">
+                    <span class="label-text">{{ __('Password') }}</span>
+                </label>
+                <input
+                    type="password"
                     id="password"
                     name="password"
-                    type="password"
-                    class="mt-1 block w-3/4"
-                    placeholder="{{ __('Password') }}"
+                    class="input input-bordered w-full @error('password', 'userDeletion') input-error @enderror"
+                    placeholder="{{ __('Enter your password') }}"
+                    required
                 />
-
-                <x-input-error :messages="$errors->userDeletion->get('password')" class="mt-2" />
+                @error('password', 'userDeletion')
+                <label class="label">
+                    <span class="label-text-alt text-error">{{ $message }}</span>
+                </label>
+                @enderror
             </div>
 
-            <div class="mt-6 flex justify-end">
-                <x-secondary-button x-on:click="$dispatch('close')">
+            <div class="modal-action">
+                <button type="button" class="btn btn-ghost" onclick="confirm_deletion_modal.close()">
                     {{ __('Cancel') }}
-                </x-secondary-button>
-
-                <x-danger-button class="ms-3">
-                    {{ __('Delete Account') }}
-                </x-danger-button>
+                </button>
+                <button type="submit" class="btn btn-error">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                    {{ __('Confirm Deletion') }}
+                </button>
             </div>
         </form>
-    </x-modal>
-</section>
+    </div>
+    <form method="dialog" class="modal-backdrop">
+        <button>close</button>
+    </form>
+</dialog>
+
+@if ($errors->userDeletion->isNotEmpty())
+    <script>
+        document.addEventListener('DOMContentLoaded', () => confirm_deletion_modal.showModal());
+    </script>
+@endif
