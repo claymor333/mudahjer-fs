@@ -21,7 +21,7 @@
 					Save Quiz
 				</p>
 				<div class="kbd-inst mt-2">
-					<kbd class="kbd kbd-sm">CTRL</kbd> + <kbd class="kbd kbd-sm">S</kbd>
+					<kbd class="kbd !bg-transparent kbd-sm">CTRL</kbd> + <kbd class="kbd !bg-transparent kbd-sm">S</kbd>
 				</div>
 			</div>
 		</div>
@@ -38,7 +38,7 @@
 					Add Item
 				</p>
 				<div class="kbd-inst mt-2">
-					<kbd class="kbd kbd-sm">CTRL</kbd> + <kbd class="kbd kbd-sm">E</kbd>
+					<kbd class="kbd !bg-transparent kbd-sm">CTRL</kbd> + <kbd class="kbd !bg-transparent kbd-sm">E</kbd>
 				</div>
 			</div>
 		</div>

@@ -15,7 +15,7 @@ class Lesson extends Model
 
     public function player()
     {
-            return $this->belongsToMany(Player::class, 'players_lessons', 'lesson_id', 'player_id')
+            return $this->belongsToMany(Player::class, 'lesson_player', 'lesson_id', 'player_id')
                 ->withTimestamps();
     }
 

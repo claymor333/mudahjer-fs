@@ -9,9 +9,9 @@
 			</div>
 			<ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow-lg bg-[var(--bg-card)] rounded-box w-52 backdrop-blur-xl border border-[var(--border-color)]">
 				<li><a class="hover:text-[var(--accent)]">Learn</a></li>
-				<li><a class="hover:text-[var(--accent)]">Practice</a></li>
+				{{-- <li><a class="hover:text-[var(--accent)]">Practice</a></li> --}}
 				<li><a class="hover:text-[var(--accent)]">Dictionary</a></li>
-				<li><a class="hover:text-[var(--accent)]">Community</a></li>
+				{{-- <li><a class="hover:text-[var(--accent)]">Community</a></li> --}}
 			</ul>
 		</div>
 		<a href="{{ url('/') }}" class="btn btn-ghost text-xl hover:bg-[#afd9e0]/20 font-bold flex items-center gap-2">
@@ -21,6 +21,9 @@
 	</div>
 	<div class="navbar-center hidden lg:flex">
 		<ul class="menu menu-horizontal px-1 gap-2">
+			@hasrole('admin')
+				<li><a href="{{ route('admin.dashboard') }}" class="hover:text-[var(--accent)] transition-colors">Admin</a></li>
+			@endhasrole
 			<li><a href="{{ route('player.quizzes.index') }}" class="hover:text-[var(--accent)] transition-colors">Learn</a></li>
 			{{-- <li><a class="hover:text-[var(--accent)] transition-colors">Practice</a></li> --}}
 			<li><a href="{{ route('player.notes.index') }}" class="hover:text-[var(--accent)] transition-colors">Dictionary</a></li>
