@@ -43,62 +43,42 @@
             <div class="flex items-center gap-2 bg-gradient-to-r from-orange-400 to-red-500 text-white px-4 py-2 rounded-full shadow-lg">
                 <div class="streak-flame text-2xl">🔥</div>
                 <div class="text-center">
-                    <div class="text-lg font-bold">15</div>
+                    <div class="text-lg font-bold">{{ $streakDays }}</div>
                     <div class="text-xs opacity-90">day streak</div>
                 </div>
             </div>
         </div>
     </x-slot>
 
-    <div class="py-4 bg-base-100 min-h-screen">
+    <div class="bg-base-100 min-h-screen">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
 
             <!-- Additional Stats Section -->
             <div class="mb-8">
-                <div class="stats stats-vertical border border-base-300 dark:bg-base-200 lg:stats-horizontal shadow-lg w-full backdrop-blur-lg">
+                <div class="stats stats-vertical lg:stats-horizontal border border-base-300 dark:bg-base-200 shadow-lg w-full backdrop-blur-lg mb-8">
                     <div class="stat">
-                        <div class="stat-figure text-secondary">
-                            <div class="avatar online">
-                                <div class="w-16 rounded-full">
-                                    <div class="bg-secondary text-secondary-content rounded-full w-16 h-16 flex items-center justify-center">
-                                        <span class="text-2xl">🎯</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                         <div class="stat-title">Total Quizzes</div>
-                        <div class="stat-value text-secondary">127</div>
+                        <div class="stat-value text-secondary">{{ $totalQuizzes }}</div>
                         <div class="stat-desc">Completed this month</div>
                     </div>
-                    
+
                     <div class="stat">
-                        <div class="stat-figure text-secondary">
-                            <div class="avatar">
-                                <div class="w-16 rounded-full">
-                                    <div class="bg-accent text-accent-content rounded-full w-16 h-16 flex items-center justify-center">
-                                        <span class="text-2xl">📈</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                         <div class="stat-title">Accuracy Rate</div>
-                        <div class="stat-value text-accent">89%</div>
-                        <div class="stat-desc">↗️ 12% improvement</div>
+                        <div class="stat-value text-accent">{{ $accuracy }}%</div>
+                        <div class="stat-desc">Across all completed quizzes</div>
                     </div>
-                    
+
                     <div class="stat">
-                        <div class="stat-figure text-secondary">
-                            <div class="avatar">
-                                <div class="w-16 rounded-full">
-                                    <div class="bg-info text-info-content rounded-full w-16 h-16 flex items-center justify-center">
-                                        <span class="text-2xl">⭐</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                         <div class="stat-title">Level</div>
-                        <div class="stat-value text-info">Intermediate</div>
-                        <div class="stat-desc">Level 7 of 10</div>
+                        <div class="stat-value text-info">Level {{ $level }}</div>
+                        <div class="stat-desc">
+                            {{ $inProgressCount }} lessons at 100%
+                            @if ($canAdvance)
+                                • <span class="text-success">Ready for next level</span>
+                            @else
+                                • <span class="text-warning">Complete at least one</span>
+                            @endif
+                        </div>
                     </div>
                 </div>
             </div>
@@ -190,7 +170,7 @@
             </div>
 
             <!-- Progress Section -->
-            <div class="mt-8">
+            {{-- <div class="mt-8">
                 <div class="card card-border border-base-300 bg-base-100 dark:bg-base-200 shadow-lg">
                     <div class="card-body">
                         <h3 class="card-title mb-4">
@@ -222,7 +202,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> --}}
         </div>
     </div>
 
