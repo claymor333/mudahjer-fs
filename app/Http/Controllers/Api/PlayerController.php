@@ -56,4 +56,20 @@ class PlayerController extends Controller
             'lesson_completed' => $lessonCompleted,
         ]);
     }
+
+    public function postResult(Request $request)
+    {
+        $data = $request->validate([
+            'userId' => 'required|exists:users,id',
+            'score' => 'required|numeric',
+            'totalQuestions' => 'required|integer',
+            'correctAnswers' => 'required|integer',
+            'incorrectAnswers' => 'required|integer',
+        ]);
+
+        return response()->json([
+            'message' => 'Result saved successfully',
+            'data' => $data,
+        ]);
+    }
 }
