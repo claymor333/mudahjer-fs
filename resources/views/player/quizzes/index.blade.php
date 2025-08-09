@@ -44,8 +44,8 @@
                     </g>
                 </svg>
                 <input type="search" id="searchInput" class="grow" placeholder="Search signs..." />
-                <kbd class="kbd kbd-sm">CTRL</kbd>
-                <kbd class="kbd kbd-sm">K</kbd>
+                <kbd class="kbd !bg-transparent kbd-sm">CTRL</kbd>
+                <kbd class="kbd !bg-transparent kbd-sm">K</kbd>
             </label>
         </div>
     </x-slot>

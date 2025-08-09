@@ -47,12 +47,14 @@ class QuizController extends Controller
             'notes.*.media' => 'nullable|file|mimes:jpeg,png,jpg,webp,gif,mp4,webm|max:10240',
 
             'questions' => 'required|array|min:1',
-            'questions.*.question_text' => 'required|string',
+            'questions.*.question_text' => 'nullable|string',
             'questions.*.correct_choice' => 'required|numeric',
             'questions.*.media' => 'nullable|file|mimes:jpeg,png,jpg,webp,gif,mp4,webm|max:10240'
         ]);
 
         try {
+            $choicesType = $validated['choices_type'];
+
             $quiz = Quiz::create([
                 'title' => $validated['title'],
                 'description' => $validated['description'],
@@ -83,8 +85,8 @@ class QuizController extends Controller
                 }
 
                 $question = $quiz->questions()->create([
-                    'question_text' => $questionData['question_text'],
-                    'media_path' => $mediaPath
+                    'question_text' => $choicesType === 'media' ? $questionData['question_text'] : null,
+                    'media_path' => $choicesType === 'text' ? $mediaPath : null
                 ]);
 
                 // Choices

@@ -5,7 +5,15 @@
         </h2>
     </x-slot>
 
-    @vite(['resources/css/quiz-wizard.css', 'resources/js/media-handling-edit.js', 'resources/js/quiz-questions-edit.js', 'resources/js/quiz-notes-edit.js', 'resources/js/quiz-edit-validator.js'])
+    @vite(
+        [
+            'resources/css/quiz-wizard.css', 
+            'resources/js/quizzes/edit/media-handling-edit.js', 
+            'resources/js/quizzes/edit/quiz-questions-edit.js', 
+            'resources/js/quizzes/edit/quiz-notes-edit.js', 
+            'resources/js/quizzes/edit/quiz-edit-validator.js'
+        ]
+    )
     <div class="py-4">
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
         <!-- Enhanced Stepper -->
@@ -52,7 +60,7 @@
             <input type="hidden" id="quiz-id" value="{{ $quiz->id }}">
             
             <!-- Step 1: Quiz Details -->
-            <div id="quiz-details" class="card bg-base-200 shadow-lg">
+            <div id="quiz-details" class="card card-border border-base-300 dark:bg-base-200 shadow-xl">
                 <div class="card-body">
                     <fieldset class="fieldset">
                         <legend class="fieldset-legend">
@@ -138,7 +146,7 @@
                         </button>
                         <div class="kbd-inst-q">
                             <span class="flex-row" id="prevKbdN">
-                                <kbd class="kbd kbd-sm">CTRL</kbd> + <kbd class="kbd kbd-sm">Q</kbd>
+                                <kbd class="kbd !bg-transparent kbd-sm">CTRL</kbd> + <kbd class="kbd !bg-transparent kbd-sm">Q</kbd>
                             </span>
                         </div>
                     </div>
@@ -151,7 +159,7 @@
                         </button>
                         <div class="kbd-inst-q">
                             <span class="flex-row" id="nextKbdN">
-                                <kbd class="kbd kbd-sm">CTRL</kbd> + <kbd class="kbd kbd-sm">E</kbd>
+                                <kbd class="kbd !bg-transparent kbd-sm">CTRL</kbd> + <kbd class="kbd !bg-transparent kbd-sm">E</kbd>
                             </span>
                         </div>
                     </div>
@@ -186,7 +194,7 @@
                             </button>
                             <div class="kbd-inst-q">
                                 <span class="flex-row" id="prevKbdQ">
-                                    <kbd class="kbd kbd-sm">CTRL</kbd> + <kbd class="kbd kbd-sm">Q</kbd>
+                                    <kbd class="kbd !bg-transparent kbd-sm">CTRL</kbd> + <kbd class="kbd !bg-transparent kbd-sm">Q</kbd>
                                 </span>
                             </div>
                         </div>
@@ -199,7 +207,7 @@
                             </button>
                             <div class="kbd-inst-q">
                                 <span class="flex-row" id="nextKbdQ">
-                                    <kbd class="kbd kbd-sm">CTRL</kbd> + <kbd class="kbd kbd-sm">E</kbd>
+                                    <kbd class="kbd !bg-transparent kbd-sm">CTRL</kbd> + <kbd class="kbd !bg-transparent kbd-sm">E</kbd>
                                 </span>
                             </div>
                         </div>
@@ -468,7 +476,28 @@
             // Step 1 validation (Quiz Details)
             if (currentStep === 1) {
 
-                if (!validateStep(currentStep)) {
+                const { isValid, firstInvalidElement, firstErrorIndex, errorType } = validateStep(currentStep);
+
+                if (!isValid) {
+                    // Navigate carousel to error item
+                    if (errorType === 'note') {
+                        navigateToNote(firstErrorIndex);
+                    } else if (errorType === 'question') {
+                        navigateToQuestion(firstErrorIndex);
+                    }
+
+                    // Scroll to the invalid field after DOM updates
+                    setTimeout(() => {
+                        if (firstInvalidElement) {
+                            $('html, body').animate({
+                                scrollTop: $(firstInvalidElement).offset().top - 100
+                            }, 500);
+
+                            $(firstInvalidElement).addClass('animate-pulse');
+                            setTimeout(() => $(firstInvalidElement).removeClass('animate-pulse'), 1000);
+                        }
+                    }, 300);
+
                     return;
                 }
 
@@ -489,7 +518,28 @@
             
             if (currentStep === 2) {
 
-                if (!validateStep(currentStep)) {
+                const { isValid, firstInvalidElement, firstErrorIndex, errorType } = validateStep(currentStep);
+
+                if (!isValid) {
+                    // Navigate carousel to error item
+                    if (errorType === 'note') {
+                        navigateToNote(firstErrorIndex);
+                    } else if (errorType === 'question') {
+                        navigateToQuestion(firstErrorIndex);
+                    }
+
+                    // Scroll to the invalid field after DOM updates
+                    setTimeout(() => {
+                        if (firstInvalidElement) {
+                            $('html, body').animate({
+                                scrollTop: $(firstInvalidElement).offset().top - 100
+                            }, 500);
+
+                            $(firstInvalidElement).addClass('animate-pulse');
+                            setTimeout(() => $(firstInvalidElement).removeClass('animate-pulse'), 1000);
+                        }
+                    }, 300);
+
                     return;
                 }
 
@@ -546,19 +596,6 @@
                 addQuestion();
             }
         }
-
-        $(document).on('change', '#quiz-choices-type', function () {
-            const newType = $(this).val();
-
-            if (!window.confirm('Changing the choices type will reset all existing choices.\n\nText and media in all questions will be deleted.\n\nAre you sure you want to continue?')) {
-                // Restore the previous value
-                this.value = this.dataset.previousValue || 'text';
-                return;
-            }
-
-            updateQuestionsForChoicesType(newType);
-            this.dataset.previousValue = newType;
-        });
 
         $(document).on('change', '#quiz-lesson', function () {
             const $lesson = $('#quiz-lesson');
@@ -686,12 +723,34 @@
 
             console.log('Saving quiz with ID:', quizId);
 
-            if (!validateStep(currentStep)) {
-                console.log('Validating failed');
+            const { isValid, firstInvalidElement, firstErrorIndex, errorType } = validateStep(currentStep);
+
+            if (!isValid) {
+                // Navigate carousel to error item
+                if (errorType === 'note') {
+                    console.log("invalid n")
+                    navigateToNote(firstErrorIndex);
+                } else if (errorType === 'question') {
+                    console.log("invalid q")
+                    navigateToQuestion(firstErrorIndex);
+                } else {
+                    console.log("valid")
+                }
+
+                // Scroll to the invalid field after DOM updates
+                setTimeout(() => {
+                    if (firstInvalidElement) {
+                        $('html, body').animate({
+                            scrollTop: $(firstInvalidElement).offset().top - 100
+                        }, 500);
+
+                        $(firstInvalidElement).addClass('animate-pulse');
+                        setTimeout(() => $(firstInvalidElement).removeClass('animate-pulse'), 1000);
+                    }
+                }, 300);
+
                 return;
             }
-
-            console.log('Validating passed');
 
             const formData = new FormData();
             formData.append('_method', 'PUT');
