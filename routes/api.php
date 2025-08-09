@@ -39,6 +39,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 
     Route::post('lessons/{lesson_id}/questions/{quiz_id}/submit', [QuizController::class,'submitQuiz']);
     Route::post('/player/exp', [PlayerController::class, 'addExp']);
+    Route::post('/post-result/{player_id}',[PlayerController::class, 'postResult']);
 });
 // Get Quizzes for a specific lesson
 // Get Questions for a specific quiz
