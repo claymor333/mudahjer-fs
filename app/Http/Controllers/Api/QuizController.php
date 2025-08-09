@@ -19,39 +19,23 @@ class QuizController extends Controller
      */
     public function getLessons($user_id)
     {
-        $player = Player::where('user_id', $user_id)->first();
-
-        if (!$player) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Player not found'
-            ], 404);
-        }
-
-        $lessons = $player->lessons;
-
+        $lessons = Lesson::all();
         $total = $lessons->count();
-        $completed = $lessons->where('pivot.completed', true)->count();
-        $percentage = $total > 0 ? round(($completed / $total) * 100, 2) : 0;
 
         // Add completed and progress info to each lesson
         $lessonsData = $lessons->map(function ($lesson) {
             return [
                 'id' => $lesson->id,
                 'title' => $lesson->title,
-                'completed' => (bool) $lesson->pivot->completed,
-                'progress' => $lesson->pivot->progress,
                 'required_level' => $lesson->required_level,
-                'completed_at' => $lesson->pivot->completed_at,
+                'progress'=>0
             ];
         });
 
         return response()->json([
             'status' => 'success',
             'data' => $lessonsData,
-            'percentage_completed' => $percentage,
             'total_lessons' => $total,
-            'completed_lessons' => $completed,
         ]);
     }
     /**
@@ -102,7 +86,7 @@ class QuizController extends Controller
                 return [
                     'question_id'   => $question->id,
                     'question_text' => $question->question_text,
-                    'media_path'    => $question->media_path,
+                    'media_path'    => url($question->media_path),
                     'choices'       => $question->choices->map(function ($choice) {
                         return [
                             'choice_id'     => $choice->id,
