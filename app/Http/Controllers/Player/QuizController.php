@@ -4,18 +4,25 @@ namespace App\Http\Controllers\Player;
 
 use App\Http\Controllers\Controller;
 use App\Models\Lesson;
+use App\Models\Player;
 use App\Models\Quiz;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 class QuizController extends Controller
 {
     public function index()
     {
-        // fetch all lessons with their related quiz
-        $lessons = Lesson::with('quizzes')->get();
+        $player = Player::where('user_id', Auth::id())->first();
+        Log::info('Player ID for quizzes', ['player_id' => $player->id]);
 
-        // log the data as an array, not the Eloquent collection directly
+        // Load lessons with quizzes, each quiz's player submission status (filtered to this player)
+        $lessons = Lesson::with(['quizzes.lessonplayerquiz' => function ($query) use ($player) {
+            $query->where('player_id', $player->id);
+        }])->get();
+
+        // Log the lessons data
         Log::info('Fetching lessons for quizzes', [
             'lessons' => $lessons->toArray()
         ]);

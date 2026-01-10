@@ -10,7 +10,7 @@
 
     <div class="py-4">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-base-100 shadow-xl rounded-box">
+            <div class="bg-base-100 dark:bg-base-200 shadow-xl rounded-box border border-base-300">
                 <div class="overflow-x-auto">
                     <table class="table w-full">
                         <thead>
@@ -29,7 +29,7 @@
                                 @csrf
                                 @method('DELETE')
                             </form>
-                            <tr>
+                            <tr class="hover:bg-base-200 dark:hover:bg-base-300">
                                 <td>{{ $quiz->title }}</td>
                                 <td>{{ Str::limit($quiz->description, 50) }}</td>
                                 <td>{{ $quiz->questions->count() }}</td>

@@ -47,12 +47,14 @@ class QuizController extends Controller
             'notes.*.media' => 'nullable|file|mimes:jpeg,png,jpg,webp,gif,mp4,webm|max:10240',
 
             'questions' => 'required|array|min:1',
-            'questions.*.question_text' => 'required|string',
+            'questions.*.question_text' => 'nullable|string',
             'questions.*.correct_choice' => 'required|numeric',
             'questions.*.media' => 'nullable|file|mimes:jpeg,png,jpg,webp,gif,mp4,webm|max:10240'
         ]);
 
         try {
+            $choicesType = $validated['choices_type'];
+
             $quiz = Quiz::create([
                 'title' => $validated['title'],
                 'description' => $validated['description'],
@@ -83,8 +85,8 @@ class QuizController extends Controller
                 }
 
                 $question = $quiz->questions()->create([
-                    'question_text' => $questionData['question_text'],
-                    'media_path' => $mediaPath
+                    'question_text' => $choicesType === 'media' ? $questionData['question_text'] : null,
+                    'media_path' => $choicesType === 'text' ? $mediaPath : null
                 ]);
 
                 // Choices
@@ -359,7 +361,8 @@ class QuizController extends Controller
     {
         $validated = request()->validate([
             'title' => 'required|string|max:255',
-            'description' => 'nullable|string'
+            'description' => 'nullable|string',
+            'required_level' => 'required|integer|min:1',
         ]);
 
         try {
@@ -382,6 +385,54 @@ class QuizController extends Controller
                 'success' => false,
                 'message' => 'Failed to create lesson. Please try again.'
             ], 500);
+        }
+    }
+
+    public function getLesson($id)
+    {
+        try {
+            $lesson = Lesson::findOrFail($id);
+            return response()->json($lesson);
+        } catch (\Exception $e) {
+            Log::error("Failed to fetch lesson with ID $id: " . $e->getMessage());
+            return response()->json(['error' => 'Lesson not found.'], 404);
+        }
+    }
+
+    public function updateLesson(Request $request, $id)
+    {
+        try {
+            $lesson = Lesson::findOrFail($id);
+
+            $request->validate([
+                'title' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'required_level' => 'required|integer|min:1',
+            ]);
+
+            $lesson->update([
+                'title' => $request->title,
+                'description' => $request->description,
+                'required_level' => $request->required_level,
+            ]);
+
+            return response()->json($lesson);
+        } catch (\Exception $e) {
+            Log::error("Failed to update lesson with ID $id: " . $e->getMessage());
+            return response()->json(['error' => 'Failed to update lesson.'], 500);
+        }
+    }
+
+    public function deleteLesson($id)
+    {
+        try {
+            $lesson = Lesson::findOrFail($id);
+            $lesson->delete();
+
+            return response()->json(['message' => 'Lesson deleted successfully']);
+        } catch (\Exception $e) {
+            Log::error("Failed to delete lesson with ID $id: " . $e->getMessage());
+            return response()->json(['error' => 'Failed to delete lesson.'], 500);
         }
     }
 }

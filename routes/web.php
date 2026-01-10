@@ -16,6 +16,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::patch('/profile/player', [ProfileController::class, 'updatePlayer'])->name('player.update');
 
     Route::get('/player/quizzes', [PlayerQuizController::class, 'index'])->name('player.quizzes.index');
     Route::get('/player/quiz/play/{id}', [PlayerQuizController::class, 'show'])->name('player.quizzes.play');
@@ -31,10 +32,14 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     Route::get('/quizzes/{id}/edit', [QuizController::class, 'editQuiz'])->name('quizzes.edit');
     Route::put('/quizzes/{id}/update', [QuizController::class, 'updateQuiz'])->name('quizzes.update');
-
     Route::delete('/quizzes/{id}/delete', [QuizController::class, 'deleteQuiz'])->name('quizzes.delete');
 
-    Route::post('/quizzes/lesson/store', [QuizController::class, 'storeLesson'])->name('lessons.store');
+    Route::post('/quizzes/lessons/store', [QuizController::class, 'storeLesson'])->name('lessons.store');
+    Route::get('/quizzes/lessons/{id}/show', [QuizController::class, 'getLesson'])->name('lessons.show');
+    Route::put('/quizzes/lessons/{id}/update', [QuizController::class, 'updateLesson'])->name('lessons.update');
+    Route::delete('/quizzes/lessons/{id}/delete', [QuizController::class, 'deleteLesson'])->name('lessons.delete');
+
 });
+
 
 require __DIR__.'/auth.php';

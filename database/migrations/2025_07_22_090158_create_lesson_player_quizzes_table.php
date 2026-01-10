@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('lesson_id')->constrained('lessons')->onDelete('cascade');
             $table->foreignId('quiz_id')->constrained('quizzes')->onDelete('cascade');
             $table->boolean('is_completed')->default(false);
+            $table->integer('duration_seconds')->nullable(); // stores elapsed time in seconds
             $table->json('answers_json')->nullable();
             $table->timestamps();
         });

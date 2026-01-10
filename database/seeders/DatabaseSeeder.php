@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             // TestSeeder::class,
             LessonSeeder::class,
+            QuizSeeder::class,
         ]);
 
         $userAdmin = User::create([

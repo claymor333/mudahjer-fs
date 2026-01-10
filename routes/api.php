@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\PlayerController;
 use App\Http\Controllers\Api\QuizController;
 
 /// {url}/api/register - register and returns bearer token
@@ -30,12 +31,15 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::group(['middleware' => 'auth:sanctum'], function () {
+    // Player
     // Get Lessons
     Route::get('/lessons/{user_id}', [QuizController::class, 'getLessons']);
     Route::get('/quizzes/{lesson_id}', [QuizController::class,'getQuizzes']);
     Route::get('/questions/{quiz_id}', [QuizController::class,'getQuestions']);  // amik semua dalam quiz
 
     Route::post('lessons/{lesson_id}/questions/{quiz_id}/submit', [QuizController::class,'submitQuiz']);
+    Route::post('/player/exp', [PlayerController::class, 'addExp']);
+    Route::post('/post-result/{player_id}',[PlayerController::class, 'postResult']);
 });
 // Get Quizzes for a specific lesson
 // Get Questions for a specific quiz

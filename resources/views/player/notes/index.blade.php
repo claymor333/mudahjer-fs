@@ -65,8 +65,8 @@
                     <div class="join-item relative flex-1 sm:flex-none">
                         <input type="search" id="searchInput" class="input input-bordered w-full pr-20" placeholder="Search signs..." />
                         <div class="absolute top-0 right-0 join-item h-full flex items-center pr-2">
-                            <kbd class="kbd kbd-sm">⌘</kbd>
-                            <kbd class="kbd kbd-sm ml-1">K</kbd>
+                            <kbd class="kbd !bg-transparent kbd-sm">⌘</kbd>
+                            <kbd class="kbd !bg-transparent kbd-sm ml-1">K</kbd>
                         </div>
                     </div>
                 </div>
@@ -306,8 +306,6 @@
             <button>close</button>
         </form>
     </dialog>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 
     <script>
         $(function () {

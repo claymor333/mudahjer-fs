@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Choice;
 use App\Models\Lesson;
 use App\Models\LessonPlayerQuiz;
 use App\Models\Player;
@@ -12,48 +13,29 @@ use App\Models\Quiz;
 use Illuminate\Http\Request;
 
 class QuizController extends Controller
-
-
 {
-
     /**
      * Get a list of lessons.
      */
     public function getLessons($user_id)
     {
-        $player = Player::where('user_id', $user_id)->first();
-
-        if (!$player) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Player not found'
-            ], 404);
-        }
-
-        $lessons = $player->lessons;
-
+        $lessons = Lesson::all();
         $total = $lessons->count();
-        $completed = $lessons->where('pivot.completed', true)->count();
-        $percentage = $total > 0 ? round(($completed / $total) * 100, 2) : 0;
 
         // Add completed and progress info to each lesson
         $lessonsData = $lessons->map(function ($lesson) {
             return [
                 'id' => $lesson->id,
                 'title' => $lesson->title,
-                'completed' => (bool) $lesson->pivot->completed,
-                'progress' => $lesson->pivot->progress,
                 'required_level' => $lesson->required_level,
-                'completed_at' => $lesson->pivot->completed_at,
+                'progress'=>0
             ];
         });
 
         return response()->json([
             'status' => 'success',
             'data' => $lessonsData,
-            'percentage_completed' => $percentage,
             'total_lessons' => $total,
-            'completed_lessons' => $completed,
         ]);
     }
     /**
@@ -104,7 +86,7 @@ class QuizController extends Controller
                 return [
                     'question_id'   => $question->id,
                     'question_text' => $question->question_text,
-                    'media_path'    => $question->media_path,
+                    'media_path'    => url($question->media_path),
                     'choices'       => $question->choices->map(function ($choice) {
                         return [
                             'choice_id'     => $choice->id,
@@ -126,37 +108,41 @@ class QuizController extends Controller
 
     public function submitQuiz(Request $request)
     {
-        $player = Player::where('user_id', $request->user()->id)->first();
+        $player = Player::where('user_id', $request->user()->id)->firstOrFail();
 
         $validated = $request->validate([
             'lesson_id' => 'required|exists:lessons,id',
             'quiz_id' => 'required|exists:quizzes,id',
             'answers' => 'required|array', // question_id => choice_id
-            'is_completed' => 'boolean',
+            'duration_seconds' => 'nullable|integer'
         ]);
+
+        // Check if all answers are correct
+        $allCorrect = true;
+        foreach ($validated['answers'] as $questionId => $selectedChoiceId) {
+            $correctChoiceId = Choice::where('question_id', $questionId)
+                ->where('is_correct', true)
+                ->value('id');
+
+            if ((int)$selectedChoiceId !== (int)$correctChoiceId) {
+                $allCorrect = false;
+                break;
+            }
+        }
 
         // Save lesson–quiz submission
-        LessonPlayerQuiz::create([
-            'player_id' => $player->id,
-            'lesson_id' => $validated['lesson_id'],
-            'quiz_id' => $validated['quiz_id'],
-            'is_completed' => $validated['is_completed'] ?? false,
-            'answers_json' => $validated['answers'],
-        ]);
-
-        // Optionally mark lesson as completed
-        if (!empty($validated['is_completed'])) {
-            PlayerLessonProgress::updateOrCreate(
-                [
-                    'player_id' => $player->id,
-                    'lesson_id' => $validated['lesson_id'],
-                ],
-                [
-                    'is_completed' => true,
-                    'completed_at' => now(),
-                ]
-            );
-        }
+        LessonPlayerQuiz::updateOrCreate(         /// LessonPlayerQuiz model refers to individual player quiz submissions
+            [
+                'player_id' => $player->id,
+                'lesson_id' => $validated['lesson_id'],
+                'quiz_id' => $validated['quiz_id'],
+            ],
+            [
+                'is_completed' => $allCorrect, // only mark as completed if all correct
+                'answers_json' => $validated['answers'], // answer stored as {key: value} where key is question_id and value is choice_id
+                'duration_seconds' => $validated['duration_seconds'] ?? null,
+            ]
+        );
 
         // Log streak
         PlayerStreak::create([
@@ -166,8 +152,38 @@ class QuizController extends Controller
             'submitted_at' => now(),
         ]);
 
+        //////// unused lesson progress logic where level is increased if all quizzes are completed (answered correctly in full)
+
+        // // Check if all quizzes for the lesson are completed AND correct
+        // $lesson = Lesson::findOrFail($validated['lesson_id']);
+        // $totalQuizzes = $lesson->quizzes()->count();
+
+        // $completedQuizzes = LessonPlayerQuiz::where('player_id', $player->id)
+        //     ->where('lesson_id', $lesson->id)
+        //     ->where('is_completed', true) // only count fully correct quizzes
+        //     ->distinct('quiz_id')
+        //     ->count('quiz_id');
+
+        // // If all quizzes completed correctly, mark lesson as completed
+        // if ($completedQuizzes >= $totalQuizzes) {
+        //     PlayerLessonProgress::updateOrCreate(         /// PlayerLessonProgress model refers to general lesson progress; if all quizzes are completed, is_completed is set to true
+        //         [
+        //             'player_id' => $player->id,
+        //             'lesson_id' => $lesson->id,
+        //         ],
+        //         [
+        //             'is_completed' => true,
+        //             'completed_at' => now(),
+        //         ]
+        //     );
+
+        //     // Increase level (only now)
+        //     $player->increment('level');
+        // }
+
         return response()->json(['status' => 'success']);
     }
+
 
     /**
      * Display a listing of the resource.
